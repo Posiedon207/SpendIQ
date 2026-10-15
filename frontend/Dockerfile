@@ -6,8 +6,8 @@ WORKDIR /app
 # Copy package files first for layer caching
 COPY package.json package-lock.json* ./
 
-# Install all dependencies (including devDependencies for build)
-RUN npm ci --ignore-scripts
+# Install dependencies (uses npm ci if lockfile exists, fallback to npm install)
+RUN if [ -f package-lock.json ]; then npm ci --ignore-scripts; else npm install --ignore-scripts; fi
 
 # Copy source code
 COPY . .
