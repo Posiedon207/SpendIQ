@@ -4,18 +4,18 @@ services:
   # ─── PostgreSQL Database ──────────────────────────────────────────────────
   db:
     image: postgres:16-alpine
-    container_name: finpilot-db
+    container_name: spendiq-db
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-finpilot_db}
-      POSTGRES_USER: ${POSTGRES_USER:-finpilot}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-finpilot_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-spendiq_db}
+      POSTGRES_USER: ${POSTGRES_USER:-spendiq}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-spendiq_secret}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - finpilot-network
+      - spendiq-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-finpilot} -d ${POSTGRES_DB:-finpilot_db}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-spendiq} -d ${POSTGRES_DB:-spendiq_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -29,15 +29,15 @@ services:
       context: ./backend
       dockerfile: Dockerfile
       target: runtime
-    container_name: finpilot-backend
+    container_name: spendiq-backend
     restart: unless-stopped
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-finpilot}:${POSTGRES_PASSWORD:-finpilot_secret}@db:5432/${POSTGRES_DB:-finpilot_db}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-spendiq}:${POSTGRES_PASSWORD:-spendiq_secret}@db:5432/${POSTGRES_DB:-spendiq_db}
       POSTGRES_HOST: db
       POSTGRES_PORT: 5432
-      POSTGRES_DB: ${POSTGRES_DB:-finpilot_db}
-      POSTGRES_USER: ${POSTGRES_USER:-finpilot}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-finpilot_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-spendiq_db}
+      POSTGRES_USER: ${POSTGRES_USER:-spendiq}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-spendiq_secret}
       ENVIRONMENT: ${ENVIRONMENT:-development}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173}
       SECRET_KEY: ${SECRET_KEY:-dev-secret-key-change-in-production}
@@ -47,7 +47,7 @@ services:
       db:
         condition: service_healthy
     networks:
-      - finpilot-network
+      - spendiq-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -63,13 +63,13 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       target: runtime
-    container_name: finpilot-frontend
+    container_name: spendiq-frontend
     restart: unless-stopped
     depends_on:
       backend:
         condition: service_healthy
     networks:
-      - finpilot-network
+      - spendiq-network
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:80/ || exit 1"]
       interval: 30s
@@ -82,10 +82,10 @@ services:
 # ─── Named Volumes ────────────────────────────────────────────────────────────
 volumes:
   postgres_data:
-    name: finpilot-postgres-data
+    name: spendiq-postgres-data
 
 # ─── Networks ────────────────────────────────────────────────────────────────
 networks:
-  finpilot-network:
-    name: finpilot-network
+  spendiq-network:
+    name: spendiq-network
     driver: bridge

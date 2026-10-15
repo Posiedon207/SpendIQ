@@ -2,9 +2,9 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: finpilot-postgres-pvc
+  name: spendiq-postgres-pvc
   labels:
-    {{- include "finpilot.labels" . | nindent 4 }}
+    {{- include "spendiq.labels" . | nindent 4 }}
 spec:
   accessModes:
     - {{ .Values.postgresql.persistence.accessMode }}

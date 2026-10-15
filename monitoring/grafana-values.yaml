@@ -1,6 +1,6 @@
 # Grafana Helm values
 adminUser: admin
-adminPassword: "finpilot_grafana_admin_password"
+adminPassword: "spendiq_grafana_admin_password"
 
 persistence:
   enabled: true
@@ -22,19 +22,19 @@ dashboardProviders:
   dashboardproviders.yaml:
     apiVersion: 1
     providers:
-      - name: "finpilot-dashboards"
+      - name: "spendiq-dashboards"
         orgId: 1
-        folder: "FinPilot"
+        folder: "SpendIQ"
         type: file
         disableDeletion: false
         editable: true
         options:
-          path: /var/lib/grafana/dashboards/finpilot
+          path: /var/lib/grafana/dashboards/spendiq
 
 dashboards:
-  finpilot:
-    finpilot-overview:
-      file: /var/lib/grafana/dashboards/finpilot/grafana-dashboard.json
+  spendiq:
+    spendiq-overview:
+      file: /var/lib/grafana/dashboards/spendiq/grafana-dashboard.json
 
 service:
   type: LoadBalancer

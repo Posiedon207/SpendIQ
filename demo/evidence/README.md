@@ -1,4 +1,4 @@
-# FinPilot Capstone Evidence Guide & Screenshot Instructions
+# SpendIQ Capstone Evidence Guide & Screenshot Instructions
 
 As the evaluating student, you will capture screenshots from your browser, terminal, and AWS Console to populate the `demo/evidence/` directory. Each screenshot corresponds to a required rubric grading module.
 
@@ -9,9 +9,9 @@ As the evaluating student, you will capture screenshots from your browser, termi
 Save the following image files into this directory (`demo/evidence/`):
 
 ### 1. `01_app_dashboard.png` (Application Implementation - 10 Marks)
-- **Where**: Web browser at `http://localhost:3000` or Ingress host `http://finpilot.local`.
+- **Where**: Web browser at `http://localhost:3000` or Ingress host `http://spendiq.local`.
 - **What to show**:
-  - FinPilot dashboard with the 4 stat cards (Total Income, Total Expenses, Net Balance, Transaction Count).
+  - SpendIQ dashboard with the 4 stat cards (Total Income, Total Expenses, Net Balance, Transaction Count).
   - Income vs Expenses Bar chart and Expense by Category Pie chart.
   - Recent transactions list rendered with data.
 
@@ -34,7 +34,7 @@ Save the following image files into this directory (`demo/evidence/`):
 - **Where**: Terminal in repository root.
 - **Command**: `docker compose up -d` followed by `docker compose ps`
 - **What to show**:
-  - Three healthy containers: `finpilot-frontend` (port 3000), `finpilot-backend` (port 8000), `finpilot-db` (port 5432).
+  - Three healthy containers: `spendiq-frontend` (port 3000), `spendiq-backend` (port 8000), `spendiq-db` (port 5432).
   - Health checks reporting `healthy`.
 
 ### 5. `05_github_actions_pipeline.png` (GitHub Actions CI/CD - 15 Marks)
@@ -46,7 +46,7 @@ Save the following image files into this directory (`demo/evidence/`):
 ### 6. `06_ghcr_packages.png` (Container Registry - CI/CD Module)
 - **Where**: GitHub repository -> **Packages** tab.
 - **What to show**:
-  - Both packages published: `finpilot-backend` and `finpilot-frontend`.
+  - Both packages published: `spendiq-backend` and `spendiq-frontend`.
   - Tags matching immutable Git commit SHAs (e.g. `sha-<commit_sha>`).
 
 ### 7. `07_trivy_security_scan.png` (DevSecOps & Trivy - 5 Marks)
@@ -59,11 +59,11 @@ Save the following image files into this directory (`demo/evidence/`):
 - **Where**: Terminal output of `terraform apply` or AWS Console -> EKS / VPC.
 - **What to show**:
   - Terraform outputs displaying `vpc_id`, `cluster_id`, and `cluster_endpoint`.
-  - AWS Console EKS cluster showing status `ACTIVE` with managed node group `finpilot-nodes`.
+  - AWS Console EKS cluster showing status `ACTIVE` with managed node group `spendiq-nodes`.
 
 ### 9. `09_k8s_pods_services.png` (Kubernetes & Helm - 15 Marks)
 - **Where**: Terminal.
-- **Command**: `kubectl get pods,svc,hpa,ingress -n finpilot -o wide`
+- **Command**: `kubectl get pods,svc,hpa,ingress -n spendiq -o wide`
 - **What to show**:
   - Frontend Deployment running with 2/2 pods.
   - Backend Deployment running with 2/2 pods.
@@ -74,18 +74,18 @@ Save the following image files into this directory (`demo/evidence/`):
 - **Where**: Terminal split-screen during `load_test.sh` / `load_test.py`.
 - **What to show**:
   - Terminal 1: Load test running sending concurrent requests.
-  - Terminal 2: `kubectl get hpa finpilot-backend-hpa -n finpilot -w` showing CPU% climbing above 70% and REPLICAS scaling from 2 to 3, 4, 5.
+  - Terminal 2: `kubectl get hpa spendiq-backend-hpa -n spendiq -w` showing CPU% climbing above 70% and REPLICAS scaling from 2 to 3, 4, 5.
 
 ### 11. `11_prometheus_targets_up.png` (Prometheus - 5 Marks)
 - **Where**: Prometheus Web UI -> **Status** -> **Targets** (`http://localhost:9090/targets`).
 - **What to show**:
-  - Target `finpilot-backend` in state **UP (1/1)**.
+  - Target `spendiq-backend` in state **UP (1/1)**.
   - Scrape URL `http://<pod_ip>:8000/metrics`.
 
 ### 12. `12_grafana_dashboard.png` (Grafana - 5 Marks)
 - **Where**: Grafana Web UI (`http://localhost:3000`).
 - **What to show**:
-  - "FinPilot - Production Observability Dashboard" populated with live metrics.
+  - "SpendIQ - Production Observability Dashboard" populated with live metrics.
   - Timeseries graphs for HTTP Request Rate, Latency (p95), Status Codes, and Active Requests.
 
 ---
@@ -101,7 +101,7 @@ Save the following image files into this directory (`demo/evidence/`):
 | **5. CI/CD (Actions)** | 15 | Push trigger, Pytest gate, multi-stage builds, Trivy scan, GHCR publish | `.github/workflows/ci-cd.yaml` | GitHub Actions run on push to `main` | All jobs green, immutable SHA images published to GHCR | `05_github_actions_pipeline.png`<br>`06_ghcr_packages.png` | **PASS** |
 | **6. DevSecOps (Trivy)** | 5 | Security scanner integrated in CI, fails on HIGH/CRITICAL CVEs | `.github/workflows/ci-cd.yaml` | `trivy image <tag>` | Scans frontend & backend, SARIF reports uploaded | `07_trivy_security_scan.png` | **PASS** |
 | **7. Terraform & AWS** | 15 | VPC, 3 public + 3 private subnets, NAT Gateways, EKS v1.31, node group | `terraform/vpc.tf`, `terraform/eks.tf` | `terraform validate`<br>`terraform plan` | Clean plan, valid syntax, resources provisioned on AWS | `08_terraform_apply.png` | **PASS** |
-| **8. Kubernetes & Helm** | 15 | Separate deployments (2+ replicas), Ingress routing, probes, PVC, HPA | `helm/finpilot/templates/`, `scripts/load_test.sh` | `helm lint`<br>`kubectl get pods,svc,hpa -n finpilot` | Zero downtime deployment, HPA scales 2->5 pods under load | `09_k8s_pods_services.png`<br>`10_hpa_autoscaling.png` | **PASS** |
+| **8. Kubernetes & Helm** | 15 | Separate deployments (2+ replicas), Ingress routing, probes, PVC, HPA | `helm/spendiq/templates/`, `scripts/load_test.sh` | `helm lint`<br>`kubectl get pods,svc,hpa -n spendiq` | Zero downtime deployment, HPA scales 2->5 pods under load | `09_k8s_pods_services.png`<br>`10_hpa_autoscaling.png` | **PASS** |
 | **9. Observability** | 10 | `/metrics` endpoint, ServiceMonitor, Prometheus scraping, Grafana dash | `backend/app/main.py`, `monitoring/` | `curl http://localhost:8000/metrics`<br>Prometheus target status | Prometheus Target UP (1/1), Grafana charts displaying metrics | `11_prometheus_targets_up.png`<br>`12_grafana_dashboard.png` | **PASS** |
 | **10. README & Demo** | 5 | Root README with arch diagram, demo script, troubleshooting lab | `README.md`, `demo/`, `troubleshooting/` | Review `README.md` & `demo/presentation.md` | Complete presentation deck, troubleshooting runbooks | `presentation.md`<br>`checklist.md` | **PASS** |
 | **TOTAL** | **100** | | | | | | **100/100 READY** |

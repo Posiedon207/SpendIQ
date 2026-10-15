@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-FinPilot DevOps Capstone - HPA CPU Load Generator (Python)
+SpendIQ DevOps Capstone - HPA CPU Load Generator (Python)
 Spikes HTTP traffic to the backend to trigger CPU utilization scaling via HPA.
 """
 
@@ -21,7 +21,7 @@ def send_requests(worker_id: int, stop_time: float) -> int:
         try:
             req = urllib.request.Request(
                 TARGET_URL,
-                headers={"User-Agent": "FinPilot-LoadTester/1.0"}
+                headers={"User-Agent": "SpendIQ-LoadTester/1.0"}
             )
             with urllib.request.urlopen(req, timeout=3) as resp:
                 _ = resp.read()
@@ -33,14 +33,14 @@ def send_requests(worker_id: int, stop_time: float) -> int:
 
 def main():
     print("=" * 64)
-    print(" FinPilot HPA Load Generator")
+    print(" SpendIQ HPA Load Generator")
     print(f" Target URL   : {TARGET_URL}")
     print(f" Concurrency  : {CONCURRENCY} threads")
     print(f" Duration     : {DURATION_SECONDS} seconds")
     print("=" * 64)
     print("Monitor HPA in another terminal:")
-    print("  kubectl get hpa finpilot-backend-hpa -n finpilot -w")
-    print("  kubectl get pods -n finpilot -l app.kubernetes.io/component=backend -w\n")
+    print("  kubectl get hpa spendiq-backend-hpa -n spendiq -w")
+    print("  kubectl get pods -n spendiq -l app.kubernetes.io/component=backend -w\n")
 
     start_time = time.time()
     stop_time = start_time + DURATION_SECONDS

@@ -22,10 +22,10 @@ terraform {
 
   # Uncomment and configure for remote state in production:
   # backend "s3" {
-  #   bucket         = "finpilot-terraform-state"
+  #   bucket         = "spendiq-terraform-state"
   #   key            = "eks/terraform.tfstate"
   #   region         = "ap-south-1"
   #   encrypt        = true
-  #   dynamodb_table = "finpilot-terraform-locks"
+  #   dynamodb_table = "spendiq-terraform-locks"
   # }
 }

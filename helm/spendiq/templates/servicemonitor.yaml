@@ -2,15 +2,15 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: finpilot-backend-monitor
+  name: spendiq-backend-monitor
   labels:
     {{- toYaml .Values.serviceMonitor.labels | nindent 4 }}
-    {{- include "finpilot.labels" . | nindent 4 }}
+    {{- include "spendiq.labels" . | nindent 4 }}
 spec:
   selector:
     matchLabels:
       app.kubernetes.io/component: backend
-      app.kubernetes.io/name: {{ include "finpilot.name" . }}
+      app.kubernetes.io/name: {{ include "spendiq.name" . }}
   endpoints:
     - port: http
       path: {{ .Values.serviceMonitor.path }}

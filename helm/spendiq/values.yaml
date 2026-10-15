@@ -1,6 +1,6 @@
 global:
   environment: production
-  namespace: finpilot
+  namespace: spendiq
 
 # ─── PostgreSQL ─────────────────────────────────────────────────────────────
 postgresql:
@@ -10,9 +10,9 @@ postgresql:
     tag: "16-alpine"
     pullPolicy: IfNotPresent
   auth:
-    database: finpilot_db
-    username: finpilot
-    password: "finpilot_secure_k8s_password"
+    database: spendiq_db
+    username: spendiq
+    password: "spendiq_secure_k8s_password"
   persistence:
     enabled: true
     size: 5Gi
@@ -30,7 +30,7 @@ postgresql:
 backend:
   replicaCount: 2
   image:
-    repository: ghcr.io/devops/finpilot-backend
+    repository: ghcr.io/devops/spendiq-backend
     tag: "1.0.0"
     pullPolicy: IfNotPresent
   service:
@@ -40,7 +40,7 @@ backend:
   env:
     ENVIRONMENT: production
     ALLOWED_ORIGINS: "*"
-    SECRET_KEY: "k8s-prod-finpilot-secret-key-min-32-chars"
+    SECRET_KEY: "k8s-prod-spendiq-secret-key-min-32-chars"
   resources:
     requests:
       cpu: 100m
@@ -74,7 +74,7 @@ backend:
 frontend:
   replicaCount: 2
   image:
-    repository: ghcr.io/devops/finpilot-frontend
+    repository: ghcr.io/devops/spendiq-frontend
     tag: "1.0.0"
     pullPolicy: IfNotPresent
   service:
@@ -114,15 +114,15 @@ ingress:
     nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "60"
   hosts:
-    - host: finpilot.local
+    - host: spendiq.local
       paths:
         - path: /api(/|$)(.*)
           pathType: ImplementationSpecific
-          serviceName: finpilot-backend
+          serviceName: spendiq-backend
           servicePort: 8000
         - path: /(.*)
           pathType: ImplementationSpecific
-          serviceName: finpilot-frontend
+          serviceName: spendiq-frontend
           servicePort: 80
 
 # ─── Observability (ServiceMonitor for Prometheus) ───────────────────────────

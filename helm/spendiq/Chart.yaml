@@ -1,0 +1,16 @@
+apiVersion: v2
+name: spendiq
+description: Helm chart for SpendIQ SaaS - Personal Finance Management Platform
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - finance
+  - devops
+  - fastapi
+  - react
+  - postgresql
+maintainers:
+  - name: SpendIQ DevOps Team
+    email: devops@spendiq.io
+icon: https://raw.githubusercontent.com/devops/spendiq/main/frontend/public/spendiq-icon.svg

@@ -22,13 +22,13 @@ prometheus:
         cpu: 1000m
         memory: 2Gi
 
-# Additional Scrape Config for FinPilot (if ServiceMonitor is not used)
+# Additional Scrape Config for SpendIQ (if ServiceMonitor is not used)
 additionalScrapeConfigs:
-  - job_name: "finpilot-backend"
+  - job_name: "spendiq-backend"
     metrics_path: "/metrics"
     scrape_interval: 15s
     static_configs:
-      - targets: ["finpilot-backend.finpilot.svc.cluster.local:8000"]
+      - targets: ["spendiq-backend.spendiq.svc.cluster.local:8000"]
         labels:
-          app: finpilot-backend
+          app: spendiq-backend
           environment: production

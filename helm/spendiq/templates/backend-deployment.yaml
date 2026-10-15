@@ -1,10 +1,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: finpilot-backend
+  name: spendiq-backend
   labels:
     app.kubernetes.io/component: backend
-    {{- include "finpilot.labels" . | nindent 4 }}
+    {{- include "spendiq.labels" . | nindent 4 }}
 spec:
   {{- if not .Values.backend.autoscaling.enabled }}
   replicas: {{ .Values.backend.replicaCount }}
@@ -12,12 +12,12 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/component: backend
-      app.kubernetes.io/name: {{ include "finpilot.name" . }}
+      app.kubernetes.io/name: {{ include "spendiq.name" . }}
   template:
     metadata:
       labels:
         app.kubernetes.io/component: backend
-        app.kubernetes.io/name: {{ include "finpilot.name" . }}
+        app.kubernetes.io/name: {{ include "spendiq.name" . }}
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "8000"
@@ -35,7 +35,7 @@ spec:
             - '-c'
             - >
               echo "Waiting for postgres...";
-              until nc -z -v -w3 finpilot-postgres 5432; do
+              until nc -z -v -w3 spendiq-postgres 5432; do
                 echo "Postgres is unavailable - sleeping 2s";
                 sleep 2;
               done;
@@ -54,12 +54,12 @@ spec:
               protocol: TCP
           envFrom:
             - configMapRef:
-                name: finpilot-backend-config
+                name: spendiq-backend-config
           env:
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
-                  name: finpilot-postgres-secret
+                  name: spendiq-postgres-secret
                   key: DATABASE_URL
             - name: SECRET_KEY
               value: {{ .Values.backend.env.SECRET_KEY | quote }}

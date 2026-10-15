@@ -76,7 +76,7 @@ module "eks" {
   cluster_name    = var.cluster_name
   cluster_version = var.cluster_version
 
-  vpc_id     = aws_vpc.finpilot.id
+  vpc_id     = aws_vpc.spendiq.id
   subnet_ids = aws_subnet.private[*].id
 
   # Allow public access to EKS API endpoint (for kubectl from outside)
@@ -98,7 +98,7 @@ module "eks" {
 
   # Managed node groups
   eks_managed_node_groups = {
-    finpilot_nodes = {
+    spendiq_nodes = {
       name = var.node_group_name
 
       instance_types = var.node_instance_types

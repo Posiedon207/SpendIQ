@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: finpilot-frontend
+  name: spendiq-frontend
   labels:
     app.kubernetes.io/component: frontend
-    {{- include "finpilot.labels" . | nindent 4 }}
+    {{- include "spendiq.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.frontend.service.type }}
   ports:
@@ -14,4 +14,4 @@ spec:
       name: http
   selector:
     app.kubernetes.io/component: frontend
-    app.kubernetes.io/name: {{ include "finpilot.name" . }}
+    app.kubernetes.io/name: {{ include "spendiq.name" . }}

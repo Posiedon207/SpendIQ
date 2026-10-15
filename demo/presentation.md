@@ -1,7 +1,7 @@
-# FinPilot Capstone Presentation: Production DevOps & Cloud Architecture
+# SpendIQ Capstone Presentation: Production DevOps & Cloud Architecture
 
 ## Slide 1: Title & Executive Summary
-- **Project**: FinPilot — Enterprise Personal Finance Management SaaS
+- **Project**: SpendIQ — Enterprise Personal Finance Management SaaS
 - **Author**: Aditya Gosain
 - **Specialization**: Cloud Architect & Principal DevOps Engineer
 - **Mission**: Deliver a reliable, observable, scalable, and secure cloud-native architecture on AWS EKS with end-to-end GitOps CI/CD.
@@ -10,7 +10,7 @@
 
 ## Slide 2: Problem Statement & Application Architecture
 - **Problem**: Modern SaaS financial platforms require strict uptime, zero-downtime releases, automated horizontal scaling during traffic spikes, and granular observability.
-- **Solution — FinPilot 3-Tier SaaS Stack**:
+- **Solution — SpendIQ 3-Tier SaaS Stack**:
   - **Frontend**: React 18, Vite, Recharts, Axios, served via NGINX with SPA fallback.
   - **Backend**: Python 3.12+, FastAPI, SQLAlchemy, Alembic, Pydantic, Prometheus client.
   - **Database**: PostgreSQL 16 with persistent volume claims (PVC) and automated schema migrations.
@@ -44,7 +44,7 @@
 
 ## Slide 5: Kubernetes Orchestration & Helm Packaging
 - **Helm Architecture**:
-  - Unified Helm Chart (`finpilot`) with modularized templates.
+  - Unified Helm Chart (`spendiq`) with modularized templates.
   - High Availability: 2+ replicas per deployment with anti-affinity awareness.
   - Self-Healing: Liveness (`/health`) and Readiness (`/ready` with DB ping) probes.
   - Ingress Controller: Path-based routing (`/` to frontend, `/api` to backend).
@@ -101,7 +101,7 @@
 # Presenter Script & Voiceover Guide
 
 > **[00:00 - 01:00] Introduction & Architecture**
-> "Good morning, evaluators. Today I present FinPilot, a production-ready personal finance SaaS application engineered strictly to satisfy all DevOps capstone standards. FinPilot solves the challenge of high-availability cloud deployments through automated infrastructure, containerization, DevSecOps, and observability..."
+> "Good morning, evaluators. Today I present SpendIQ, a production-ready personal finance SaaS application engineered strictly to satisfy all DevOps capstone standards. SpendIQ solves the challenge of high-availability cloud deployments through automated infrastructure, containerization, DevSecOps, and observability..."
 >
 > **[01:00 - 02:30] CI/CD Pipeline & Security**
 > "Moving to our CI/CD pipeline in GitHub Actions: Every commit undergoes strict unit and integration testing via Pytest using SQLite memory isolation. On passing tests, multi-stage Docker builds generate non-root container images. Before publishing to GitHub Container Registry, Aqua Trivy scans the artifact for HIGH or CRITICAL CVEs..."
@@ -110,4 +110,4 @@
 > "Here you can see our Amazon EKS cluster deployed via Terraform. With Helm, we manage all microservices, persistent PostgreSQL volumes, and Ingress routing. Now, watch as I trigger our load test script. As CPU utilization crosses 70%, the Horizontal Pod Autoscaler dynamically scales our backend deployment from 2 to 5 pods..."
 >
 > **[04:00 - 05:00] Observability & Troubleshooting**
-> "Finally, let's examine our Grafana dashboard. Metrics scraped from our FastAPI `/metrics` endpoint stream in real-time, giving us instant visibility into latency, RPS, and HTTP status codes. Combined with our comprehensive troubleshooting runbook, FinPilot delivers enterprise-grade reliability."
+> "Finally, let's examine our Grafana dashboard. Metrics scraped from our FastAPI `/metrics` endpoint stream in real-time, giving us instant visibility into latency, RPS, and HTTP status codes. Combined with our comprehensive troubleshooting runbook, SpendIQ delivers enterprise-grade reliability."

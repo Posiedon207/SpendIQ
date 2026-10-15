@@ -2,9 +2,9 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: finpilot-ingress
+  name: spendiq-ingress
   labels:
-    {{- include "finpilot.labels" . | nindent 4 }}
+    {{- include "spendiq.labels" . | nindent 4 }}
   annotations:
     {{- toYaml .Values.ingress.annotations | nindent 4 }}
 spec:

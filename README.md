@@ -1,6 +1,6 @@
-# FinPilot — Enterprise Personal Finance SaaS (DevOps Capstone)
+# SpendIQ — Enterprise Personal Finance SaaS (DevOps Capstone)
 
-[![CI/CD Pipeline](https://github.com/devops/finpilot/actions/workflows/ci-cd.yaml/badge.svg)](https://github.com/devops/finpilot/actions/workflows/ci-cd.yaml)
+[![CI/CD Pipeline](https://github.com/devops/spendiq/actions/workflows/ci-cd.yaml/badge.svg)](https://github.com/devops/spendiq/actions/workflows/ci-cd.yaml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-v1.31-326CE5?logo=kubernetes&logoColor=white)](https://kubernetes.io/)
 [![Terraform](https://img.shields.io/badge/Terraform-1.9+-7B42BC?logo=terraform&logoColor=white)](https://www.terraform.io/)
@@ -29,7 +29,7 @@ flowchart TD
 
             subgraph PrivateSubnets["3x Private Subnets (EKS Worker Nodes)"]
                 subgraph EKS["Amazon EKS Cluster (v1.31)"]
-                    subgraph K8sNamespace["Namespace: finpilot"]
+                    subgraph K8sNamespace["Namespace: spendiq"]
                         Ingress["Ingress Controller\n/ -> Frontend\n/api -> Backend"]
                         
                         subgraph FrontendPods["Frontend Deployment (2 Replicas)"]
@@ -121,7 +121,7 @@ c:\devopsproject\
 │   │   ├── pages/                  # Dashboard, Transactions, Budgets
 │   │   ├── App.jsx                 # Client-side router configuration
 │   │   └── main.jsx                # React DOM entry
-│   ├── public/finpilot-icon.svg    # Brand asset and favicon
+│   ├── public/spendiq-icon.svg    # Brand asset and favicon
 │   ├── Dockerfile                  # Multi-stage build (Node -> Nginx production)
 │   ├── nginx.conf                  # SPA fallback, gzip compression, security headers
 │   └── package.json                # Dependencies and build scripts
@@ -135,9 +135,9 @@ c:\devopsproject\
 │   ├── outputs.tf                  # Cluster endpoint, VPC ID, kubeconfig helper
 │   └── README.md                   # Terraform runbook
 ├── k8s/
-│   └── namespace.yaml              # Kubernetes namespace manifest (`finpilot`)
+│   └── namespace.yaml              # Kubernetes namespace manifest (`spendiq`)
 ├── helm/
-│   └── finpilot/                   # Complete Helm chart
+│   └── spendiq/                   # Complete Helm chart
 │       ├── Chart.yaml              # Chart metadata
 │       ├── values.yaml             # Production values
 │       ├── values-dev.yaml         # Development overrides
@@ -174,8 +174,8 @@ c:\devopsproject\
 ### 4.2 Starting the Complete Stack
 ```bash
 # 1. Clone repository
-git clone https://github.com/devops/finpilot.git
-cd finpilot
+git clone https://github.com/devops/spendiq.git
+cd spendiq
 
 # 2. Copy environment template
 cp .env.example .env
@@ -204,7 +204,7 @@ curl -X POST http://localhost:8000/api/seed
 
 ## 5. Automated Testing & Code Quality
 
-FinPilot enforces strict test coverage with database isolation. Tests use an SQLite in-memory database to prevent test pollution of PostgreSQL data.
+SpendIQ enforces strict test coverage with database isolation. Tests use an SQLite in-memory database to prevent test pollution of PostgreSQL data.
 
 ```bash
 # Navigate to backend and run pytest
@@ -238,35 +238,35 @@ terraform plan -var-file="terraform.tfvars.example" -out=tfplan
 terraform apply tfplan
 
 # 5. Connect kubectl to your new cluster
-aws eks update-kubeconfig --region ap-south-1 --name finpilot-eks
+aws eks update-kubeconfig --region ap-south-1 --name spendiq-eks
 kubectl get nodes
 ```
 
 ### 6.2 Deploy Application with Helm
 ```bash
 # Lint the chart
-helm lint ./helm/finpilot
+helm lint ./helm/spendiq
 
-# Install or upgrade FinPilot in its dedicated namespace
-helm upgrade --install finpilot ./helm/finpilot \
-  --namespace finpilot \
+# Install or upgrade SpendIQ in its dedicated namespace
+helm upgrade --install spendiq ./helm/spendiq \
+  --namespace spendiq \
   --create-namespace \
   --wait \
   --timeout 10m
 
 # Verify running resources
-kubectl get pods,svc,pvc,ingress,hpa -n finpilot
+kubectl get pods,svc,pvc,ingress,hpa -n spendiq
 ```
 
 ---
 
 ## 7. Autoscaling Demonstration (HPA)
 
-The FinPilot backend deployment automatically scales based on CPU utilization (threshold: 70%):
+The SpendIQ backend deployment automatically scales based on CPU utilization (threshold: 70%):
 
 ```bash
 # Terminal 1: Watch autoscaling
-kubectl get hpa finpilot-backend-hpa -n finpilot -w
+kubectl get hpa spendiq-backend-hpa -n spendiq -w
 
 # Terminal 2: Run CPU load generator (spikes concurrent traffic)
 python scripts/load_test.py http://<INGRESS_OR_SERVICE_IP>/api/transactions 25 120
@@ -297,8 +297,8 @@ helm install grafana grafana/grafana \
 ```bash
 kubectl port-forward svc/grafana 3000:80 -n monitoring
 ```
-- Open [http://localhost:3000](http://localhost:3000) (User: `admin` / Password: `finpilot_grafana_admin_password`).
-- Open **FinPilot - Production Observability Dashboard** to monitor real-time Request Rate, P95 Latency, and Error Rates.
+- Open [http://localhost:3000](http://localhost:3000) (User: `admin` / Password: `spendiq_grafana_admin_password`).
+- Open **SpendIQ - Production Observability Dashboard** to monitor real-time Request Rate, P95 Latency, and Error Rates.
 
 ---
 
@@ -307,7 +307,7 @@ kubectl port-forward svc/grafana 3000:80 -n monitoring
 To avoid ongoing AWS charges after evaluation:
 ```bash
 # 1. Uninstall Helm releases
-helm uninstall finpilot -n finpilot
+helm uninstall spendiq -n spendiq
 helm uninstall prometheus -n monitoring
 helm uninstall grafana -n monitoring
 

@@ -6,7 +6,7 @@ data "aws_availability_zones" "available" {
 
 # ─── VPC ──────────────────────────────────────────────────────────────────────
 
-resource "aws_vpc" "finpilot" {
+resource "aws_vpc" "spendiq" {
   cidr_block           = var.vpc_cidr
   enable_dns_hostnames = true
   enable_dns_support   = true
@@ -20,8 +20,8 @@ resource "aws_vpc" "finpilot" {
 
 # ─── Internet Gateway ─────────────────────────────────────────────────────────
 
-resource "aws_internet_gateway" "finpilot" {
-  vpc_id = aws_vpc.finpilot.id
+resource "aws_internet_gateway" "spendiq" {
+  vpc_id = aws_vpc.spendiq.id
 
   tags = {
     Name = "${var.vpc_name}-igw"
@@ -33,7 +33,7 @@ resource "aws_internet_gateway" "finpilot" {
 resource "aws_subnet" "public" {
   count = length(var.public_subnet_cidrs)
 
-  vpc_id                  = aws_vpc.finpilot.id
+  vpc_id                  = aws_vpc.spendiq.id
   cidr_block              = var.public_subnet_cidrs[count.index]
   availability_zone       = var.availability_zones[count.index]
   map_public_ip_on_launch = true
@@ -51,7 +51,7 @@ resource "aws_subnet" "public" {
 resource "aws_subnet" "private" {
   count = length(var.private_subnet_cidrs)
 
-  vpc_id            = aws_vpc.finpilot.id
+  vpc_id            = aws_vpc.spendiq.id
   cidr_block        = var.private_subnet_cidrs[count.index]
   availability_zone = var.availability_zones[count.index]
 
@@ -73,12 +73,12 @@ resource "aws_eip" "nat" {
     Name = "${var.vpc_name}-nat-eip-${count.index + 1}"
   }
 
-  depends_on = [aws_internet_gateway.finpilot]
+  depends_on = [aws_internet_gateway.spendiq]
 }
 
 # ─── NAT Gateways (one per AZ for HA) ────────────────────────────────────────
 
-resource "aws_nat_gateway" "finpilot" {
+resource "aws_nat_gateway" "spendiq" {
   count = length(var.public_subnet_cidrs)
 
   allocation_id = aws_eip.nat[count.index].id
@@ -88,17 +88,17 @@ resource "aws_nat_gateway" "finpilot" {
     Name = "${var.vpc_name}-nat-${count.index + 1}"
   }
 
-  depends_on = [aws_internet_gateway.finpilot]
+  depends_on = [aws_internet_gateway.spendiq]
 }
 
 # ─── Public Route Table ───────────────────────────────────────────────────────
 
 resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.finpilot.id
+  vpc_id = aws_vpc.spendiq.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.finpilot.id
+    gateway_id = aws_internet_gateway.spendiq.id
   }
 
   tags = {
@@ -117,11 +117,11 @@ resource "aws_route_table_association" "public" {
 
 resource "aws_route_table" "private" {
   count  = length(var.private_subnet_cidrs)
-  vpc_id = aws_vpc.finpilot.id
+  vpc_id = aws_vpc.spendiq.id
 
   route {
     cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.finpilot[count.index].id
+    nat_gateway_id = aws_nat_gateway.spendiq[count.index].id
   }
 
   tags = {
@@ -141,7 +141,7 @@ resource "aws_route_table_association" "private" {
 resource "aws_security_group" "eks_cluster" {
   name        = "${var.cluster_name}-cluster-sg"
   description = "Security group for EKS cluster control plane"
-  vpc_id      = aws_vpc.finpilot.id
+  vpc_id      = aws_vpc.spendiq.id
 
   egress {
     from_port   = 0
@@ -159,7 +159,7 @@ resource "aws_security_group" "eks_cluster" {
 resource "aws_security_group" "eks_nodes" {
   name        = "${var.cluster_name}-nodes-sg"
   description = "Security group for EKS worker nodes"
-  vpc_id      = aws_vpc.finpilot.id
+  vpc_id      = aws_vpc.spendiq.id
 
   ingress {
     from_port   = 0

@@ -17,25 +17,25 @@ from app.database import engine, Base
 # ─── Prometheus Metrics ───────────────────────────────────────────────────────
 
 REQUEST_COUNT = Counter(
-    "finpilot_http_requests_total",
+    "spendiq_http_requests_total",
     "Total HTTP requests",
     ["method", "endpoint", "status_code"],
 )
 
 REQUEST_LATENCY = Histogram(
-    "finpilot_http_request_duration_seconds",
+    "spendiq_http_request_duration_seconds",
     "HTTP request latency in seconds",
     ["method", "endpoint"],
     buckets=[0.01, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0],
 )
 
 ACTIVE_REQUESTS = Gauge(
-    "finpilot_active_requests",
+    "spendiq_active_requests",
     "Number of active HTTP requests",
 )
 
 DB_CONNECTIONS = Gauge(
-    "finpilot_db_connections_total",
+    "spendiq_db_connections_total",
     "Number of database connections in pool",
 )
 
@@ -55,7 +55,7 @@ async def lifespan(app: FastAPI):
 
 def create_app() -> FastAPI:
     app = FastAPI(
-        title="FinPilot API",
+        title="SpendIQ API",
         description=(
             "Personal finance management SaaS — track transactions, "
             "manage budgets, and visualize spending analytics."

@@ -2,7 +2,7 @@ import os
 import pytest
 
 # Ensure tests default to SQLite before app is imported
-os.environ["DATABASE_URL"] = "sqlite:///./test_finpilot.db"
+os.environ["DATABASE_URL"] = "sqlite:///./test_spendiq.db"
 os.environ["ENVIRONMENT"] = "test"
 
 from fastapi.testclient import TestClient
@@ -13,7 +13,7 @@ from app.main import app
 from app.database import Base, get_db
 
 # Use SQLite in-memory database for testing (isolated, no PostgreSQL needed)
-SQLALCHEMY_TEST_DATABASE_URL = "sqlite:///./test_finpilot.db"
+SQLALCHEMY_TEST_DATABASE_URL = "sqlite:///./test_spendiq.db"
 
 test_engine = create_engine(
     SQLALCHEMY_TEST_DATABASE_URL,

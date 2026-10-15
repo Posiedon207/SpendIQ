@@ -3,7 +3,7 @@ provider "aws" {
 
   default_tags {
     tags = {
-      Project     = "finpilot"
+      Project     = "spendiq"
       Environment = var.environment
       ManagedBy   = "terraform"
       Owner       = var.owner

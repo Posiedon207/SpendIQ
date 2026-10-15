@@ -18,7 +18,7 @@ from app.models.models import Transaction, Budget  # noqa: F401 — needed for m
 config = context.config
 
 # Override sqlalchemy.url from environment variable
-database_url = os.getenv("DATABASE_URL", "postgresql://finpilot:finpilot_secret@localhost:5432/finpilot_db")
+database_url = os.getenv("DATABASE_URL", "postgresql://spendiq:spendiq_secret@localhost:5432/spendiq_db")
 config.set_main_option("sqlalchemy.url", database_url)
 
 # Interpret the config file for Python logging.

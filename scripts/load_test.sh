@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# FinPilot DevOps Capstone - HPA CPU Load Generator
-# Spikes traffic to the FinPilot backend to demonstrate Horizontal Pod Autoscaler (HPA)
+# SpendIQ DevOps Capstone - HPA CPU Load Generator
+# Spikes traffic to the SpendIQ backend to demonstrate Horizontal Pod Autoscaler (HPA)
 # ==============================================================================
 
 TARGET_URL="${1:-http://localhost:8000/api/transactions}"
@@ -9,15 +9,15 @@ CONCURRENCY="${2:-20}"
 DURATION_SECONDS="${3:-180}"
 
 echo "=================================================================="
-echo " Starting HPA CPU Load Test for FinPilot Backend"
+echo " Starting HPA CPU Load Test for SpendIQ Backend"
 echo " Target URL   : ${TARGET_URL}"
 echo " Concurrency  : ${CONCURRENCY} workers"
 echo " Duration     : ${DURATION_SECONDS} seconds"
 echo "=================================================================="
 echo ""
 echo "Tip: In another terminal, watch HPA in action:"
-echo "  kubectl get hpa finpilot-backend-hpa -n finpilot -w"
-echo "  kubectl get pods -n finpilot -l app.kubernetes.io/component=backend -w"
+echo "  kubectl get hpa spendiq-backend-hpa -n spendiq -w"
+echo "  kubectl get pods -n spendiq -l app.kubernetes.io/component=backend -w"
 echo ""
 
 START_TIME=$(date +%s)
@@ -54,5 +54,5 @@ echo ""
 echo "=================================================================="
 echo " Load test completed in ${TOTAL_TIME} seconds."
 echo " Verify HPA scale-down (takes ~5 minutes stabilization window):"
-echo "   kubectl get hpa finpilot-backend-hpa -n finpilot"
+echo "   kubectl get hpa spendiq-backend-hpa -n spendiq"
 echo "=================================================================="

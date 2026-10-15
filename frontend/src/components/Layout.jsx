@@ -158,7 +158,7 @@ const Layout = ({ children }) => {
               </svg>
             </div>
             <div>
-              <div style={styles.logoText}>FinPilot</div>
+              <div style={styles.logoText}>SpendIQ</div>
               <div style={styles.logoSubtext}>Finance Manager</div>
             </div>
           </div>
@@ -192,7 +192,7 @@ const Layout = ({ children }) => {
         </nav>
 
         <div style={styles.footer}>
-          <div style={styles.footerText}>v1.0.0 · FinPilot</div>
+          <div style={styles.footerText}>v1.0.0 · SpendIQ</div>
         </div>
       </aside>
 

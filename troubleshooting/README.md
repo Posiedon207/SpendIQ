@@ -1,4 +1,4 @@
-# FinPilot Production Troubleshooting Lab (Phase 10)
+# SpendIQ Production Troubleshooting Lab (Phase 10)
 
 This guide documents five real-world Kubernetes and DevOps operational failure scenarios, providing root-cause analyses, diagnostic commands, and remediation procedures.
 
@@ -9,22 +9,22 @@ This guide documents five real-world Kubernetes and DevOps operational failure s
 ### 1. Initial Symptoms
 Pod stays in `ImagePullBackOff` or `ErrImagePull` state.
 ```bash
-kubectl get pods -n finpilot
+kubectl get pods -n spendiq
 # Output:
 # NAME                                READY   STATUS             RESTARTS   AGE
-# finpilot-backend-6789abc-xyz        0/1     ImagePullBackOff   0          2m
+# spendiq-backend-6789abc-xyz        0/1     ImagePullBackOff   0          2m
 ```
 
 ### 2. Diagnostic Commands
 ```bash
-kubectl describe pod finpilot-backend-6789abc-xyz -n finpilot
-kubectl get events -n finpilot --field-selector reason=Failed
+kubectl describe pod spendiq-backend-6789abc-xyz -n spendiq
+kubectl get events -n spendiq --field-selector reason=Failed
 ```
 
 ### 3. Expected Observations
 In the `Events` section:
 ```
-Failed to pull image "ghcr.io/devops/finpilot-backend:invalid-tag": rpc error: code = NotFound desc = failed to pull and unpack image ...: not found
+Failed to pull image "ghcr.io/devops/spendiq-backend:invalid-tag": rpc error: code = NotFound desc = failed to pull and unpack image ...: not found
 Warning  Failed     Failed to pull image ...
 Warning  Failed     Error: ErrImagePull
 Normal   BackOff    Back-off pulling image ...
@@ -39,7 +39,7 @@ Warning  Failed     Error: ImagePullBackOff
 Update the image reference to a verified digest or tag:
 ```bash
 # Correcting via Helm upgrade:
-helm upgrade finpilot ./helm/finpilot -n finpilot \
+helm upgrade spendiq ./helm/spendiq -n spendiq \
   --set backend.image.tag="1.0.0"
 
 # Or if private GHCR, create imagePullSecret:
@@ -47,13 +47,13 @@ kubectl create secret docker-registry ghcr-secret \
   --docker-server=ghcr.io \
   --docker-username=<GITHUB_USER> \
   --docker-password=<GH_PAT_TOKEN> \
-  -n finpilot
+  -n spendiq
 ```
 
 ### 6. Verification
 ```bash
-kubectl rollout status deployment/finpilot-backend -n finpilot
-# Output: deployment "finpilot-backend" successfully rolled out
+kubectl rollout status deployment/spendiq-backend -n spendiq
+# Output: deployment "spendiq-backend" successfully rolled out
 ```
 
 ---
@@ -65,21 +65,21 @@ Traffic to frontend or backend times out with HTTP 502/504 or "no endpoints avai
 
 ### 2. Diagnostic Commands
 ```bash
-kubectl get endpoints finpilot-backend -n finpilot
-kubectl get svc finpilot-backend -n finpilot -o yaml | grep -A 3 selector
-kubectl get pods -n finpilot --show-labels
+kubectl get endpoints spendiq-backend -n spendiq
+kubectl get svc spendiq-backend -n spendiq -o yaml | grep -A 3 selector
+kubectl get pods -n spendiq --show-labels
 ```
 
 ### 3. Expected Observations
 The Service `Endpoints` field is `<none>`:
 ```
 NAME               ENDPOINTS   AGE
-finpilot-backend   <none>      5m
+spendiq-backend   <none>      5m
 ```
 
 ### 4. Root Cause
 The `spec.selector` in `backend-service.yaml` does not match the Pod labels defined in `spec.template.metadata.labels` in `backend-deployment.yaml`.
-For example, Service specifies `app: finpilot-backend` while Deployment pods have `app.kubernetes.io/component: backend`.
+For example, Service specifies `app: spendiq-backend` while Deployment pods have `app.kubernetes.io/component: backend`.
 
 ### 5. Corrective Action
 Align the selectors in the Service manifest:
@@ -87,19 +87,19 @@ Align the selectors in the Service manifest:
 spec:
   selector:
     app.kubernetes.io/component: backend
-    app.kubernetes.io/name: finpilot
+    app.kubernetes.io/name: spendiq
 ```
 Apply the updated chart:
 ```bash
-helm upgrade finpilot ./helm/finpilot -n finpilot
+helm upgrade spendiq ./helm/spendiq -n spendiq
 ```
 
 ### 6. Verification
 ```bash
-kubectl get endpoints finpilot-backend -n finpilot
+kubectl get endpoints spendiq-backend -n spendiq
 # Output:
 # NAME               ENDPOINTS                                   AGE
-# finpilot-backend   10.244.1.15:8000,10.244.2.19:8000           6m
+# spendiq-backend   10.244.1.15:8000,10.244.2.19:8000           6m
 ```
 
 ---
@@ -109,15 +109,15 @@ kubectl get endpoints finpilot-backend -n finpilot
 ### 1. Initial Symptoms
 Pods are in `Running` status but never reach `READY 1/1` (shows `READY 0/1`). Traffic is not routed to the Pod.
 ```bash
-kubectl get pods -n finpilot
+kubectl get pods -n spendiq
 # NAME                                READY   STATUS    RESTARTS   AGE
-# finpilot-backend-78bdf4c89-2klmp    0/1     Running   0          3m
+# spendiq-backend-78bdf4c89-2klmp    0/1     Running   0          3m
 ```
 
 ### 2. Diagnostic Commands
 ```bash
-kubectl describe pod finpilot-backend-78bdf4c89-2klmp -n finpilot
-kubectl logs finpilot-backend-78bdf4c89-2klmp -n finpilot
+kubectl describe pod spendiq-backend-78bdf4c89-2klmp -n spendiq
+kubectl logs spendiq-backend-78bdf4c89-2klmp -n spendiq
 curl -i http://<POD_IP>:8000/ready
 ```
 
@@ -132,25 +132,25 @@ sqlalchemy.exc.OperationalError: could not connect to server: Connection refused
 ```
 
 ### 4. Root Cause
-1. PostgreSQL service name is misspelled in `DATABASE_URL` (e.g. `localhost` instead of `finpilot-postgres`).
+1. PostgreSQL service name is misspelled in `DATABASE_URL` (e.g. `localhost` instead of `spendiq-postgres`).
 2. PostgreSQL pod crashed or is restarting due to disk quota/permissions.
-3. Secret `finpilot-postgres-secret` has invalid credentials.
+3. Secret `spendiq-postgres-secret` has invalid credentials.
 
 ### 5. Corrective Action
 1. Check PostgreSQL pod status and logs:
    ```bash
-   kubectl get pods -l app.kubernetes.io/component=database -n finpilot
-   kubectl logs -l app.kubernetes.io/component=database -n finpilot
+   kubectl get pods -l app.kubernetes.io/component=database -n spendiq
+   kubectl logs -l app.kubernetes.io/component=database -n spendiq
    ```
 2. Verify `DATABASE_URL` secret:
    ```bash
-   kubectl get secret finpilot-postgres-secret -n finpilot -o jsonpath="{.data.DATABASE_URL}" | base64 -d
+   kubectl get secret spendiq-postgres-secret -n spendiq -o jsonpath="{.data.DATABASE_URL}" | base64 -d
    ```
 3. Ensure PostgreSQL is ready before backend probes trigger (verified by our `wait-for-postgres` initContainer).
 
 ### 6. Verification
 ```bash
-kubectl get pods -n finpilot -l app.kubernetes.io/component=backend
+kubectl get pods -n spendiq -l app.kubernetes.io/component=backend
 # Output: 1/1 Running
 ```
 
@@ -159,13 +159,13 @@ kubectl get pods -n finpilot -l app.kubernetes.io/component=backend
 ## Scenario 4: Ingress Path Routing or 404/502 Gateway Errors
 
 ### 1. Initial Symptoms
-Accessing `http://finpilot.local/api/transactions` returns `404 Not Found` or `502 Bad Gateway`.
+Accessing `http://spendiq.local/api/transactions` returns `404 Not Found` or `502 Bad Gateway`.
 
 ### 2. Diagnostic Commands
 ```bash
-kubectl describe ingress finpilot-ingress -n finpilot
+kubectl describe ingress spendiq-ingress -n spendiq
 kubectl logs -n ingress-nginx -l app.kubernetes.io/name=ingress-nginx --tail=50
-curl -v -H "Host: finpilot.local" http://<INGRESS_CONTROLLER_IP>/api/transactions
+curl -v -H "Host: spendiq.local" http://<INGRESS_CONTROLLER_IP>/api/transactions
 ```
 
 ### 3. Expected Observations
@@ -180,17 +180,17 @@ Missing or incorrect regex rewrite annotation in NGINX Ingress Controller. In NG
 `path: /api(/|$)(.*)` requires `nginx.ingress.kubernetes.io/rewrite-target: /$2` so that `/api/transactions` is forwarded to the backend as `/api/transactions`.
 
 ### 5. Corrective Action
-Update `helm/finpilot/templates/ingress.yaml` to include appropriate rewrite annotations or pass unmodified URLs directly.
+Update `helm/spendiq/templates/ingress.yaml` to include appropriate rewrite annotations or pass unmodified URLs directly.
 ```yaml
 annotations:
   nginx.ingress.kubernetes.io/use-regex: "true"
   nginx.ingress.kubernetes.io/rewrite-target: /api/$2
 ```
-Or route directly if FastAPI handles `/api` route prefix (which FinPilot does in `app/api/routes.py`).
+Or route directly if FastAPI handles `/api` route prefix (which SpendIQ does in `app/api/routes.py`).
 
 ### 6. Verification
 ```bash
-curl -H "Host: finpilot.local" http://<INGRESS_IP>/api/transactions
+curl -H "Host: spendiq.local" http://<INGRESS_IP>/api/transactions
 # Output: {"transactions":[],"total":0,"page":1,"page_size":20,"total_pages":0}
 ```
 
@@ -199,17 +199,17 @@ curl -H "Host: finpilot.local" http://<INGRESS_IP>/api/transactions
 ## Scenario 5: Prometheus Target DOWN (Scrape Failure)
 
 ### 1. Initial Symptoms
-In the Prometheus UI (`/targets`), target `finpilot-backend` is listed with state `DOWN`.
+In the Prometheus UI (`/targets`), target `spendiq-backend` is listed with state `DOWN`.
 In Grafana, metric panels show `No data`.
 
 ### 2. Diagnostic Commands
 ```bash
 # Check if Prometheus can reach the backend metrics endpoint
-kubectl port-forward svc/finpilot-backend 8000:8000 -n finpilot &
+kubectl port-forward svc/spendiq-backend 8000:8000 -n spendiq &
 curl -s http://localhost:8000/metrics | head -n 10
 
 # Check ServiceMonitor selector
-kubectl get servicemonitor -n finpilot -o yaml
+kubectl get servicemonitor -n spendiq -o yaml
 
 # Inspect Prometheus logs
 kubectl logs -l app.kubernetes.io/name=prometheus -n monitoring --tail=100 | grep -i "scrape"
@@ -221,11 +221,11 @@ Prometheus Targets page shows:
 
 ### 4. Root Cause
 1. Target port mismatch: Service defines port `8000` named `http`, but ServiceMonitor references port `metrics` instead of `http`.
-2. NetworkPolicy blocking traffic between `monitoring` namespace and `finpilot` namespace.
+2. NetworkPolicy blocking traffic between `monitoring` namespace and `spendiq` namespace.
 3. Prometheus server missing permissions to scrape outside its namespace.
 
 ### 5. Corrective Action
-Align the port name in `ServiceMonitor` to match `finpilot-backend` service:
+Align the port name in `ServiceMonitor` to match `spendiq-backend` service:
 ```yaml
 endpoints:
   - port: http
@@ -236,6 +236,6 @@ Verify label matching between Prometheus CRD selector (`release: prometheus`) an
 
 ### 6. Verification
 Navigate to Prometheus Web UI -> **Status** -> **Targets**:
-Target `finpilot-backend-monitor` reports state **UP (1/1)**.
+Target `spendiq-backend-monitor` reports state **UP (1/1)**.
 Execute PromQL query in Prometheus:
-`finpilot_http_requests_total` returns live counters.
+`spendiq_http_requests_total` returns live counters.

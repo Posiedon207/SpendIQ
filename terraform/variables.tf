@@ -18,7 +18,7 @@ variable "environment" {
 variable "owner" {
   description = "Owner tag value for all resources"
   type        = string
-  default     = "finpilot-team"
+  default     = "spendiq-team"
 }
 
 # ─── VPC Variables ────────────────────────────────────────────────────────────
@@ -26,7 +26,7 @@ variable "owner" {
 variable "vpc_name" {
   description = "Name for the VPC"
   type        = string
-  default     = "finpilot-vpc"
+  default     = "spendiq-vpc"
 }
 
 variable "vpc_cidr" {
@@ -58,7 +58,7 @@ variable "private_subnet_cidrs" {
 variable "cluster_name" {
   description = "Name for the EKS cluster"
   type        = string
-  default     = "finpilot-eks"
+  default     = "spendiq-eks"
 }
 
 variable "cluster_version" {
@@ -70,7 +70,7 @@ variable "cluster_version" {
 variable "node_group_name" {
   description = "Name for the EKS managed node group"
   type        = string
-  default     = "finpilot-nodes"
+  default     = "spendiq-nodes"
 }
 
 variable "node_instance_types" {

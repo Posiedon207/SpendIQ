@@ -23,7 +23,7 @@ FROM nginx:1.27-alpine AS runtime
 RUN rm -f /etc/nginx/conf.d/default.conf
 
 # Copy our custom nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/finpilot.conf
+COPY nginx.conf /etc/nginx/conf.d/spendiq.conf
 
 # Copy built React app from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html

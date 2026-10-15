@@ -1,4 +1,4 @@
-# FinPilot Live Demo Execution Checklist
+# SpendIQ Live Demo Execution Checklist
 
 Follow this command sequence during the live video evaluation or presentation.
 
@@ -73,16 +73,16 @@ cd ..
 ## 5. Kubernetes & Helm Deployment
 ```bash
 # Connect to EKS cluster
-aws eks update-kubeconfig --region ap-south-1 --name finpilot-eks
+aws eks update-kubeconfig --region ap-south-1 --name spendiq-eks
 
 # Verify nodes
 kubectl get nodes -o wide
 
 # Verify Helm chart installation
-helm list -n finpilot
+helm list -n spendiq
 
 # Verify all Pods, Services, PVC, and Ingress
-kubectl get pods,svc,pvc,ingress -n finpilot -o wide
+kubectl get pods,svc,pvc,ingress -n spendiq -o wide
 
 # Confirm both backend and frontend have at least 2 replicas running
 ```
@@ -92,7 +92,7 @@ kubectl get pods,svc,pvc,ingress -n finpilot -o wide
 ## 6. HPA Autoscaling Live Test
 ```bash
 # Open Terminal 1: Watch HPA and Pods
-kubectl get hpa finpilot-backend-hpa -n finpilot -w
+kubectl get hpa spendiq-backend-hpa -n spendiq -w
 
 # Open Terminal 2: Run load generator
 python scripts/load_test.py http://<INGRESS_OR_LB_IP>/api/transactions 25 120
@@ -109,8 +109,8 @@ python scripts/load_test.py http://<INGRESS_OR_LB_IP>/api/transactions 25 120
 kubectl port-forward svc/grafana 3000:80 -n monitoring
 
 # Open Browser: http://localhost:3000
-# Login: admin / finpilot_grafana_admin_password
-# Open Dashboard: "FinPilot - Production Observability Dashboard"
+# Login: admin / spendiq_grafana_admin_password
+# Open Dashboard: "SpendIQ - Production Observability Dashboard"
 # Highlight:
 #  - Active Request Rate
 #  - P95 Latency graph responding to load test

@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql+psycopg2://finpilot:finpilot_secret@localhost:5432/finpilot_db"
+    "postgresql+psycopg2://spendiq:spendiq_secret@localhost:5432/spendiq_db"
 )
 
 # Convert generic postgresql:// to postgresql+psycopg2:// if needed
@@ -28,7 +28,7 @@ try:
 except Exception:
     # Safe fallback for local test environments without postgres installed
     engine = create_engine(
-        "sqlite:///./finpilot_local.db",
+        "sqlite:///./spendiq_local.db",
         connect_args={"check_same_thread": False},
     )
 

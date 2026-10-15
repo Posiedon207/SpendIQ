@@ -1,6 +1,6 @@
-# FinPilot Infrastructure as Code (Terraform)
+# SpendIQ Infrastructure as Code (Terraform)
 
-This directory provisions the complete AWS infrastructure for the FinPilot DevOps Capstone project using Terraform.
+This directory provisions the complete AWS infrastructure for the SpendIQ DevOps Capstone project using Terraform.
 
 ## Architecture Provisioned
 
@@ -8,7 +8,7 @@ This directory provisions the complete AWS infrastructure for the FinPilot DevOp
    - CIDR: `10.0.0.0/16`
    - 3 Public Subnets across 3 Availability Zones (with Internet Gateway)
    - 3 Private Subnets across 3 Availability Zones (with NAT Gateways for outbound security)
-   - Proper Kubernetes tags (`kubernetes.io/cluster/finpilot-eks = shared`, `kubernetes.io/role/elb = 1`, `kubernetes.io/role/internal-elb = 1`)
+   - Proper Kubernetes tags (`kubernetes.io/cluster/spendiq-eks = shared`, `kubernetes.io/role/elb = 1`, `kubernetes.io/role/internal-elb = 1`)
 
 2. **Amazon EKS Cluster**
    - Version: `1.31`
@@ -42,7 +42,7 @@ terraform plan -var-file="terraform.tfvars.example" -out=tfplan
 terraform apply tfplan
 
 # 6. Retrieve cluster kubeconfig
-aws eks update-kubeconfig --region ap-south-1 --name finpilot-eks
+aws eks update-kubeconfig --region ap-south-1 --name spendiq-eks
 
 # 7. Verify cluster connectivity
 kubectl get nodes -o wide
