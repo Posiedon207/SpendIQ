@@ -210,7 +210,7 @@ jobs:
           format: "sarif"
           output: "trivy-backend-results.sarif"
           severity: "HIGH,CRITICAL"
-          exit-code: "0"
+          exit-code: "1"
           ignore-unfixed: true
 
       - name: Run Trivy table output — backend
@@ -219,7 +219,7 @@ jobs:
           image-ref: ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
           format: "table"
           severity: "HIGH,CRITICAL"
-          exit-code: "0"
+          exit-code: "1"
           ignore-unfixed: true
 
       - name: Upload Trivy backend SARIF report
@@ -254,7 +254,7 @@ jobs:
           format: "sarif"
           output: "trivy-frontend-results.sarif"
           severity: "HIGH,CRITICAL"
-          exit-code: "0"
+          exit-code: "1"
           ignore-unfixed: true
 
       - name: Run Trivy table output — frontend
@@ -263,7 +263,7 @@ jobs:
           image-ref: ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
           format: "table"
           severity: "HIGH,CRITICAL"
-          exit-code: "0"
+          exit-code: "1"
           ignore-unfixed: true
 
       - name: Upload Trivy frontend SARIF report
