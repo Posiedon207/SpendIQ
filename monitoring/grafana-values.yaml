@@ -1,0 +1,42 @@
+# Grafana Helm values
+adminUser: admin
+adminPassword: "finpilot_grafana_admin_password"
+
+persistence:
+  enabled: true
+  size: 5Gi
+
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        type: prometheus
+        url: http://prometheus-kube-prometheus-prometheus.monitoring.svc.cluster.local:9090
+        access: proxy
+        isDefault: true
+        jsonData:
+          timeInterval: 15s
+
+dashboardProviders:
+  dashboardproviders.yaml:
+    apiVersion: 1
+    providers:
+      - name: "finpilot-dashboards"
+        orgId: 1
+        folder: "FinPilot"
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards/finpilot
+
+dashboards:
+  finpilot:
+    finpilot-overview:
+      file: /var/lib/grafana/dashboards/finpilot/grafana-dashboard.json
+
+service:
+  type: LoadBalancer
+  port: 80
+  targetPort: 3000

@@ -1,0 +1,34 @@
+# Prometheus Operator / kube-prometheus-stack Helm values
+prometheus:
+  prometheusSpec:
+    serviceMonitorSelectorNilUsesHelmValues: false
+    serviceMonitorSelector: {}
+    serviceMonitorNamespaceSelector: {}
+    ruleSelectorNilUsesHelmValues: false
+    ruleSelector: {}
+    ruleNamespaceSelector: {}
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 10Gi
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+
+# Additional Scrape Config for FinPilot (if ServiceMonitor is not used)
+additionalScrapeConfigs:
+  - job_name: "finpilot-backend"
+    metrics_path: "/metrics"
+    scrape_interval: 15s
+    static_configs:
+      - targets: ["finpilot-backend.finpilot.svc.cluster.local:8000"]
+        labels:
+          app: finpilot-backend
+          environment: production
