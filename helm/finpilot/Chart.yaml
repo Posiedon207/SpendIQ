@@ -1,0 +1,16 @@
+apiVersion: v2
+name: finpilot
+description: Helm chart for FinPilot SaaS - Personal Finance Management Platform
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - finance
+  - devops
+  - fastapi
+  - react
+  - postgresql
+maintainers:
+  - name: FinPilot DevOps Team
+    email: devops@finpilot.io
+icon: https://raw.githubusercontent.com/devops/finpilot/main/frontend/public/finpilot-icon.svg
