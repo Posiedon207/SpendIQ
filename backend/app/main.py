@@ -43,8 +43,11 @@ DB_CONNECTIONS = Gauge(
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Application lifespan: create tables on startup."""
-    Base.metadata.create_all(bind=engine)
+    """Application lifespan: ensure tables exist on startup."""
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception:
+        pass
     yield
 
 

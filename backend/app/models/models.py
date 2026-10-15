@@ -46,14 +46,22 @@ class Transaction(Base):
     title = Column(String(200), nullable=False)
     amount = Column(Float, nullable=False)
     transaction_type = Column(
-        Enum(TransactionType),
+        Enum(
+            TransactionType,
+            values_callable=lambda obj: [e.value for e in obj],
+            name="transactiontype",
+        ),
         nullable=False,
-        index=True
+        index=True,
     )
     category = Column(
-        Enum(TransactionCategory),
+        Enum(
+            TransactionCategory,
+            values_callable=lambda obj: [e.value for e in obj],
+            name="transactioncategory",
+        ),
         nullable=False,
-        index=True
+        index=True,
     )
     description = Column(Text, nullable=True)
     date = Column(DateTime(timezone=True), nullable=False, index=True)

@@ -9,6 +9,7 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = "001_initial"
@@ -18,21 +19,29 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Create transaction_type enum
-    transaction_type_enum = sa.Enum(
-        "income", "expense",
-        name="transactiontype"
-    )
-    transaction_type_enum.create(op.get_bind(), checkfirst=True)
+    bind = op.get_bind()
+    is_pg = bind.dialect.name == "postgresql"
 
-    # Create transaction_category enum
-    transaction_category_enum = sa.Enum(
-        "salary", "freelance", "investment",
-        "food", "transport", "housing", "utilities",
-        "entertainment", "healthcare", "education", "shopping", "other",
-        name="transactioncategory"
-    )
-    transaction_category_enum.create(op.get_bind(), checkfirst=True)
+    # Safely create enum types in PostgreSQL if they don't already exist
+    if is_pg:
+        op.execute(sa.text("""
+            DO $$ BEGIN
+                CREATE TYPE transactiontype AS ENUM ('income', 'expense');
+            EXCEPTION
+                WHEN duplicate_object THEN null;
+            END $$;
+        """))
+        op.execute(sa.text("""
+            DO $$ BEGIN
+                CREATE TYPE transactioncategory AS ENUM (
+                    'salary', 'freelance', 'investment',
+                    'food', 'transport', 'housing', 'utilities',
+                    'entertainment', 'healthcare', 'education', 'shopping', 'other'
+                );
+            EXCEPTION
+                WHEN duplicate_object THEN null;
+            END $$;
+        """))
 
     # Create budgets table
     op.create_table(
@@ -50,14 +59,36 @@ def upgrade() -> None:
     op.create_index(op.f("ix_budgets_category"), "budgets", ["category"], unique=False)
     op.create_index(op.f("ix_budgets_id"), "budgets", ["id"], unique=False)
 
+    type_col = (
+        postgresql.ENUM("income", "expense", name="transactiontype", create_type=False)
+        if is_pg
+        else sa.Enum("income", "expense", name="transactiontype")
+    )
+    category_col = (
+        postgresql.ENUM(
+            "salary", "freelance", "investment",
+            "food", "transport", "housing", "utilities",
+            "entertainment", "healthcare", "education", "shopping", "other",
+            name="transactioncategory",
+            create_type=False
+        )
+        if is_pg
+        else sa.Enum(
+            "salary", "freelance", "investment",
+            "food", "transport", "housing", "utilities",
+            "entertainment", "healthcare", "education", "shopping", "other",
+            name="transactioncategory"
+        )
+    )
+
     # Create transactions table
     op.create_table(
         "transactions",
         sa.Column("id", sa.Integer(), nullable=False),
         sa.Column("title", sa.String(length=200), nullable=False),
         sa.Column("amount", sa.Float(), nullable=False),
-        sa.Column("transaction_type", transaction_type_enum, nullable=False),
-        sa.Column("category", transaction_category_enum, nullable=False),
+        sa.Column("transaction_type", type_col, nullable=False),
+        sa.Column("category", category_col, nullable=False),
         sa.Column("description", sa.Text(), nullable=True),
         sa.Column("date", sa.DateTime(timezone=True), nullable=False),
         sa.Column("is_recurring", sa.Boolean(), nullable=True),
