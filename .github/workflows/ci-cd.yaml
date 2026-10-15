@@ -1,0 +1,329 @@
+name: FinPilot CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+
+env:
+  REGISTRY: ghcr.io
+  BACKEND_IMAGE: ghcr.io/${{ github.repository_owner }}/finpilot-backend
+  FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/finpilot-frontend
+  PYTHON_VERSION: "3.12"
+  NODE_VERSION: "22"
+
+permissions:
+  contents: read
+  packages: write
+  security-events: write
+
+jobs:
+  # ─── Job 1: Backend Tests ─────────────────────────────────────────────────
+  backend-tests:
+    name: Backend Tests (Pytest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: "pip"
+          cache-dependency-path: "backend/requirements.txt"
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Pytest with coverage
+        run: pytest --tb=short -v --cov=app --cov-report=xml --cov-report=term-missing
+        env:
+          DATABASE_URL: sqlite:///./test_finpilot.db
+          ENVIRONMENT: test
+          ALLOWED_ORIGINS: http://localhost:3000
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: backend/coverage.xml
+          retention-days: 7
+
+  # ─── Job 2: Frontend Build ────────────────────────────────────────────────
+  frontend-build:
+    name: Frontend Build Validation
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: "frontend/package-lock.json"
+
+      - name: Install npm dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Build production bundle
+        run: npm run build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/
+          retention-days: 7
+
+  # ─── Job 3: Build Backend Image ───────────────────────────────────────────
+  build-backend-image:
+    name: Build Backend Docker Image
+    runs-on: ubuntu-latest
+    needs: [backend-tests]
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tags }}
+      sha_tag: ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.BACKEND_IMAGE }}
+          tags: |
+            type=sha,format=long,prefix=sha-
+            type=ref,event=branch
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          target: runtime
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
+            ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          labels: ${{ steps.meta.outputs.labels }}
+
+  # ─── Job 4: Build Frontend Image ─────────────────────────────────────────
+  build-frontend-image:
+    name: Build Frontend Docker Image
+    runs-on: ubuntu-latest
+    needs: [frontend-build]
+    outputs:
+      image_tag: ${{ steps.meta.outputs.tags }}
+      sha_tag: ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.FRONTEND_IMAGE }}
+          tags: |
+            type=sha,format=long,prefix=sha-
+            type=ref,event=branch
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          target: runtime
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: |
+            ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+            ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          labels: ${{ steps.meta.outputs.labels }}
+
+  # ─── Job 5: Trivy Security Scan — Backend ─────────────────────────────────
+  trivy-scan-backend:
+    name: Trivy Scan — Backend Image
+    runs-on: ubuntu-latest
+    needs: [build-backend-image]
+    if: github.event_name != 'pull_request'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run Trivy vulnerability scan — backend
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
+          format: "sarif"
+          output: "trivy-backend-results.sarif"
+          severity: "HIGH,CRITICAL"
+          exit-code: "0"
+          ignore-unfixed: true
+
+      - name: Run Trivy table output — backend
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
+          format: "table"
+          severity: "HIGH,CRITICAL"
+          exit-code: "0"
+          ignore-unfixed: true
+
+      - name: Upload Trivy backend SARIF report
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: "trivy-backend-results.sarif"
+          category: "trivy-backend"
+
+  # ─── Job 6: Trivy Security Scan — Frontend ────────────────────────────────
+  trivy-scan-frontend:
+    name: Trivy Scan — Frontend Image
+    runs-on: ubuntu-latest
+    needs: [build-frontend-image]
+    if: github.event_name != 'pull_request'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run Trivy vulnerability scan — frontend
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+          format: "sarif"
+          output: "trivy-frontend-results.sarif"
+          severity: "HIGH,CRITICAL"
+          exit-code: "0"
+          ignore-unfixed: true
+
+      - name: Run Trivy table output — frontend
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+          format: "table"
+          severity: "HIGH,CRITICAL"
+          exit-code: "0"
+          ignore-unfixed: true
+
+      - name: Upload Trivy frontend SARIF report
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: "trivy-frontend-results.sarif"
+          category: "trivy-frontend"
+
+  # ─── Job 7: Helm Deploy ──────────────────────────────────────────────────
+  helm-deploy:
+    name: Helm Deploy to Kubernetes
+    runs-on: ubuntu-latest
+    needs:
+      - trivy-scan-backend
+      - trivy-scan-frontend
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure kubectl
+        if: env.KUBECONFIG_DATA != ''
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG_DATA }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+        env:
+          KUBECONFIG_DATA: ${{ secrets.KUBECONFIG_DATA }}
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: "v3.16.3"
+
+      - name: Deploy with Helm
+        if: env.KUBECONFIG_DATA != ''
+        run: |
+          helm upgrade --install finpilot ./helm/finpilot \
+            --namespace finpilot \
+            --create-namespace \
+            --set backend.image.repository=${{ env.BACKEND_IMAGE }} \
+            --set backend.image.tag=${{ github.sha }} \
+            --set frontend.image.repository=${{ env.FRONTEND_IMAGE }} \
+            --set frontend.image.tag=${{ github.sha }} \
+            --set backend.image.pullPolicy=Always \
+            --set frontend.image.pullPolicy=Always \
+            --timeout 10m \
+            --wait \
+            --atomic
+        env:
+          KUBECONFIG_DATA: ${{ secrets.KUBECONFIG_DATA }}
+
+      - name: Verify deployment
+        if: env.KUBECONFIG_DATA != ''
+        run: |
+          kubectl rollout status deployment/finpilot-backend -n finpilot --timeout=5m
+          kubectl rollout status deployment/finpilot-frontend -n finpilot --timeout=5m
+          kubectl get pods -n finpilot
+        env:
+          KUBECONFIG_DATA: ${{ secrets.KUBECONFIG_DATA }}
