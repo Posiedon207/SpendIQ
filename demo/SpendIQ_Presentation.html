@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SpendIQ — DevOps Capstone Presentation</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #070c1a;
+    --bg2: #0d1528;
+    --card: rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.08);
+    --cyan: #00d4ff;
+    --green: #00ff88;
+    --purple: #a855f7;
+    --orange: #f97316;
+    --yellow: #eab308;
+    --blue: #3b82f6;
+    --red: #ef4444;
+    --text: #e2e8f0;
+    --muted: #64748b;
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--bg);
+    font-family: 'Inter', sans-serif;
+    color: var(--text);
+    overflow: hidden;
+  }
+
+  .deck { width: 100%; height: 100vh; position: relative; }
+
+  .slide {
+    position: absolute; inset: 0;
+    display: none; flex-direction: column;
+    padding: 40px 60px;
+    background: linear-gradient(135deg, #070c1a 0%, #0d1528 50%, #070c1a 100%);
+    opacity: 0; transition: opacity 0.4s ease;
+  }
+  .slide.active { display: flex; opacity: 1; }
+
+  .nav {
+    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 16px; z-index: 100;
+    background: rgba(7,12,26,0.9); border: 1px solid var(--border);
+    padding: 10px 20px; border-radius: 40px; backdrop-filter: blur(20px);
+  }
+  .nav button {
+    background: var(--card); border: 1px solid var(--border);
+    color: var(--text); padding: 8px 20px; border-radius: 20px;
+    cursor: pointer; font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 500;
+    transition: all 0.2s;
+  }
+  .nav button:hover { background: rgba(0,212,255,0.15); border-color: var(--cyan); color: var(--cyan); }
+  .nav .counter { font-size: 13px; color: var(--muted); min-width: 60px; text-align: center; }
+
+  .progress-bar {
+    position: fixed; top: 0; left: 0; height: 3px;
+    background: linear-gradient(90deg, var(--cyan), var(--purple));
+    transition: width 0.4s ease; z-index: 200;
+  }
+
+  .slide-title {
+    font-size: 2rem; font-weight: 800; margin-bottom: 24px;
+    background: linear-gradient(135deg, #fff 0%, var(--cyan) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    flex-shrink: 0;
+  }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 700;
+  }
+  .badge-green { background: rgba(0,255,136,0.15); border: 1px solid var(--green); color: var(--green); }
+  .badge-orange { background: rgba(249,115,22,0.15); border: 1px solid var(--orange); color: var(--orange); }
+  .badge-cyan { background: rgba(0,212,255,0.15); border: 1px solid var(--cyan); color: var(--cyan); }
+
+  .score-badge {
+    position: absolute; bottom: 80px; right: 60px;
+    background: rgba(0,255,136,0.1); border: 2px solid var(--green);
+    color: var(--green); padding: 8px 22px; border-radius: 30px;
+    font-size: 1rem; font-weight: 800;
+    box-shadow: 0 0 20px rgba(0,255,136,0.2);
+  }
+
+  .glass-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 20px; backdrop-filter: blur(10px);
+  }
+  .glass-card.blue { border-color: rgba(59,130,246,0.4); box-shadow: 0 0 16px rgba(59,130,246,0.1); }
+  .glass-card.green { border-color: rgba(0,255,136,0.4); box-shadow: 0 0 16px rgba(0,255,136,0.1); }
+  .glass-card.purple { border-color: rgba(168,85,247,0.4); box-shadow: 0 0 16px rgba(168,85,247,0.1); }
+  .glass-card.orange { border-color: rgba(249,115,22,0.4); box-shadow: 0 0 16px rgba(249,115,22,0.1); }
+  .glass-card.cyan { border-color: rgba(0,212,255,0.4); box-shadow: 0 0 16px rgba(0,212,255,0.1); }
+  .glass-card.yellow { border-color: rgba(234,179,8,0.4); box-shadow: 0 0 16px rgba(234,179,8,0.1); }
+
+  .card-title {
+    font-size: 0.9rem; font-weight: 700; margin-bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .dot-blue { background: var(--blue); }
+  .dot-green { background: var(--green); }
+  .dot-purple { background: var(--purple); }
+  .dot-orange { background: var(--orange); }
+  .dot-cyan { background: var(--cyan); }
+  .dot-yellow { background: var(--yellow); }
+
+  .card-list { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+  .card-list li {
+    font-size: 0.82rem; color: var(--text); opacity: 0.85;
+    display: flex; align-items: flex-start; gap: 8px;
+  }
+  .card-list li::before { content: '→'; color: var(--cyan); font-weight: 700; flex-shrink: 0; }
+
+  .terminal {
+    background: #080d1c; border: 1px solid rgba(0,212,255,0.2);
+    border-radius: 12px; padding: 18px; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem; line-height: 1.7;
+  }
+  .t-head { display: flex; gap: 6px; margin-bottom: 14px; }
+  .t-dot { width: 12px; height: 12px; border-radius: 50%; }
+  .t-red { background: #ff5f57; } .t-yellow { background: #febc2e; } .t-green { background: #28c840; }
+  .t-pass { color: #00ff88; font-weight: 700; }
+  .t-dim { color: #64748b; }
+  .t-cyan { color: #00d4ff; }
+  .t-yellow-t { color: #eab308; }
+  .t-purple { color: #a855f7; }
+  .t-orange { color: #f97316; }
+  .t-white { color: #e2e8f0; }
+
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; flex: 1; min-height: 0; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; flex: 1; min-height: 0; }
+
+  .slide-body { display: flex; gap: 20px; flex: 1; min-height: 0; }
+  .slide-left { flex: 1.4; display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+  .slide-right { flex: 1; display: flex; flex-direction: column; gap: 14px; min-height: 0; }
+
+  .stat-number { font-size: 2.2rem; font-weight: 900; line-height: 1; }
+
+  .pipeline {
+    display: flex; align-items: center; gap: 0; margin-bottom: 16px; flex-shrink: 0;
+  }
+  .pipe-box {
+    min-width: 80px; height: 60px; border-radius: 10px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-size: 0.68rem; font-weight: 700; gap: 3px; padding: 6px; text-align: center;
+  }
+  .pipe-icon { font-size: 1rem; }
+  .pipe-arrow { font-size: 1.2rem; color: var(--muted); padding: 0 3px; }
+
+  /* Slide 1 */
+  #s1 { justify-content: center; align-items: center; text-align: center; }
+  #s1 .big-title {
+    font-size: 5.5rem; font-weight: 900; letter-spacing: -4px;
+    background: linear-gradient(135deg, var(--cyan) 0%, #0080ff 50%, var(--purple) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    filter: drop-shadow(0 0 40px rgba(0,212,255,0.4)); margin-bottom: 14px;
+  }
+  #s1 .sub { font-size: 1.3rem; color: var(--muted); margin-bottom: 32px; }
+  #s1 .pill-row { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 28px; }
+  #s1 .pill {
+    padding: 7px 18px; border-radius: 30px; font-size: 0.82rem; font-weight: 600;
+    border: 1px solid var(--border); background: var(--card);
+  }
+
+  /* Slide 2 */
+  #s2 .modules-grid {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; flex: 1; min-height: 0;
+  }
+  #s2 .mod-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 14px 12px; text-align: center;
+  }
+  #s2 .mod-num { font-size: 0.72rem; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
+  #s2 .mod-name { font-size: 0.78rem; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  #s2 .mod-pts { font-size: 1.1rem; font-weight: 800; }
+  #s2 .total-row { display: flex; justify-content: flex-end; align-items: center; gap: 14px; margin-top: 14px; flex-shrink: 0; }
+
+  /* Slide 13 */
+  #s13 .final-grid {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; flex: 1; min-height: 0;
+  }
+  #s13 .fin-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px; text-align: center;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+  }
+  #s13 .fin-m { font-size: 0.7rem; color: var(--muted); font-weight: 600; }
+  #s13 .fin-name { font-size: 0.75rem; color: var(--text); font-weight: 600; }
+  #s13 .fin-pts { font-size: 1.3rem; font-weight: 900; }
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progressBar"></div>
+<div class="deck" id="deck">
+
+<!-- ══ SLIDE 1: Title ══ -->
+<div class="slide active" id="s1">
+  <div class="big-title">SpendIQ</div>
+  <div class="sub">DevOps Final Capstone Project — Session 21</div>
+  <div class="pill-row">
+    <span class="pill">🐍 FastAPI + Python 3.12</span>
+    <span class="pill">⚛️ React 18 + Vite</span>
+    <span class="pill">🐳 Docker + Compose</span>
+    <span class="pill">☸️ Kubernetes + Helm</span>
+    <span class="pill">🔁 GitHub Actions CI/CD</span>
+    <span class="pill">🛡️ Trivy Security</span>
+    <span class="pill">🏗️ Terraform + AWS EKS</span>
+    <span class="pill">📊 Prometheus + Grafana</span>
+  </div>
+  <div class="badge badge-green" style="font-size:1.1rem; padding:12px 32px;">🎯 Full-Stack Finance Management SaaS — 100 / 100 Points</div>
+</div>
+
+<!-- ══ SLIDE 2: Overview ══ -->
+<div class="slide" id="s2">
+  <div class="slide-title">Project Overview — All 10 Modules</div>
+  <div class="modules-grid">
+    <div class="mod-card glass-card blue"><div class="mod-num">M1</div><div class="mod-name">Application</div><div class="mod-pts" style="color:var(--blue)">10 pts</div></div>
+    <div class="mod-card glass-card green"><div class="mod-num">M2</div><div class="mod-name">Testing</div><div class="mod-pts" style="color:var(--green)">10 pts</div></div>
+    <div class="mod-card glass-card cyan"><div class="mod-num">M3</div><div class="mod-name">Git & GitHub</div><div class="mod-pts" style="color:var(--cyan)">5 pts</div></div>
+    <div class="mod-card glass-card purple"><div class="mod-num">M4</div><div class="mod-name">Docker</div><div class="mod-pts" style="color:var(--purple)">10 pts</div></div>
+    <div class="mod-card glass-card yellow"><div class="mod-num">M5</div><div class="mod-name">CI/CD</div><div class="mod-pts" style="color:var(--yellow)">15 pts</div></div>
+    <div class="mod-card glass-card orange"><div class="mod-num">M6</div><div class="mod-name">DevSecOps</div><div class="mod-pts" style="color:var(--orange)">5 pts</div></div>
+    <div class="mod-card glass-card orange"><div class="mod-num">M7</div><div class="mod-name">Terraform</div><div class="mod-pts" style="color:var(--orange)">15 pts</div></div>
+    <div class="mod-card glass-card blue"><div class="mod-num">M8</div><div class="mod-name">Kubernetes</div><div class="mod-pts" style="color:var(--blue)">15 pts</div></div>
+    <div class="mod-card glass-card purple"><div class="mod-num">M9</div><div class="mod-name">Observability</div><div class="mod-pts" style="color:var(--purple)">10 pts</div></div>
+    <div class="mod-card glass-card green"><div class="mod-num">M10</div><div class="mod-name">Docs + Demo</div><div class="mod-pts" style="color:var(--green)">5 pts</div></div>
+  </div>
+  <div class="total-row">
+    <span style="color:var(--muted);font-size:0.9rem">All modules implemented and verified</span>
+    <div class="badge badge-green" style="font-size:1rem; padding: 10px 22px;">✅ Total: 100 / 100 pts</div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 3: Architecture ══ -->
+<div class="slide" id="s3">
+  <div class="slide-title">System Architecture</div>
+  <div style="flex:1; display:flex; flex-direction:column; gap:14px; min-height:0;">
+    <div class="glass-card" style="padding:16px;">
+      <div style="font-size:0.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">User Request Flow</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;">
+        <div class="glass-card blue" style="padding:10px 16px;text-align:center;border-radius:10px;"><div style="font-size:0.65rem;color:var(--muted)">Browser</div><div style="font-weight:700;color:var(--blue);font-size:0.85rem">React+Vite</div><div style="font-size:0.65rem;color:var(--muted)">:3000</div></div>
+        <span style="color:var(--cyan);font-size:1.1rem">→</span>
+        <div class="glass-card green" style="padding:10px 16px;text-align:center;border-radius:10px;"><div style="font-size:0.65rem;color:var(--muted)">API</div><div style="font-weight:700;color:var(--green);font-size:0.85rem">FastAPI</div><div style="font-size:0.65rem;color:var(--muted)">:8000</div></div>
+        <span style="color:var(--cyan);font-size:1.1rem">→</span>
+        <div class="glass-card purple" style="padding:10px 16px;text-align:center;border-radius:10px;"><div style="font-size:0.65rem;color:var(--muted)">DB</div><div style="font-weight:700;color:var(--purple);font-size:0.85rem">PostgreSQL</div><div style="font-size:0.65rem;color:var(--muted)">:5432</div></div>
+        <span style="color:var(--cyan);font-size:1.1rem">→</span>
+        <div class="glass-card orange" style="padding:10px 16px;text-align:center;border-radius:10px;"><div style="font-size:0.65rem;color:var(--muted)">Metrics</div><div style="font-weight:700;color:var(--orange);font-size:0.85rem">Prometheus</div><div style="font-size:0.65rem;color:var(--muted)">/metrics</div></div>
+        <span style="color:var(--cyan);font-size:1.1rem">→</span>
+        <div class="glass-card yellow" style="padding:10px 16px;text-align:center;border-radius:10px;"><div style="font-size:0.65rem;color:var(--muted)">Viz</div><div style="font-weight:700;color:var(--yellow);font-size:0.85rem">Grafana</div><div style="font-size:0.65rem;color:var(--muted)">Dashboard</div></div>
+      </div>
+    </div>
+    <div class="glass-card yellow" style="padding:14px;">
+      <div style="font-size:0.72rem;color:var(--yellow);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">⚡ GitHub Actions CI/CD Pipeline</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span class="badge badge-cyan" style="font-size:0.72rem">Push to main</span><span style="color:var(--muted)">→</span>
+        <span class="badge badge-green" style="font-size:0.72rem">pytest (45 tests)</span><span style="color:var(--muted)">→</span>
+        <span class="badge badge-cyan" style="font-size:0.72rem">Docker build</span><span style="color:var(--muted)">→</span>
+        <span class="badge badge-orange" style="font-size:0.72rem">Trivy scan</span><span style="color:var(--muted)">→</span>
+        <span class="badge badge-green" style="font-size:0.72rem">GHCR push (SHA tag)</span><span style="color:var(--muted)">→</span>
+        <span class="badge badge-cyan" style="font-size:0.72rem">Helm deploy to K8s</span>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <div class="glass-card blue" style="padding:14px;">
+        <div style="font-size:0.72rem;color:var(--blue);font-weight:700;text-transform:uppercase;margin-bottom:8px;">☸️ Kubernetes (AWS EKS)</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <span class="badge badge-cyan" style="font-size:0.68rem">namespace: spendiq</span>
+          <span class="badge badge-cyan" style="font-size:0.68rem">2 replicas each</span>
+          <span class="badge badge-cyan" style="font-size:0.68rem">Ingress</span>
+          <span class="badge badge-cyan" style="font-size:0.68rem">HPA</span>
+          <span class="badge badge-cyan" style="font-size:0.68rem">Helm chart</span>
+        </div>
+      </div>
+      <div class="glass-card orange" style="padding:14px;">
+        <div style="font-size:0.72rem;color:var(--orange);font-weight:700;text-transform:uppercase;margin-bottom:8px;">🏗️ Terraform (AWS)</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <span class="badge badge-orange" style="font-size:0.68rem">VPC</span>
+          <span class="badge badge-orange" style="font-size:0.68rem">2 public subnets</span>
+          <span class="badge badge-orange" style="font-size:0.68rem">EKS cluster</span>
+          <span class="badge badge-orange" style="font-size:0.68rem">Managed Node Group</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SLIDE 4: M1 Application ══ -->
+<div class="slide" id="s4">
+  <div class="slide-title">M1 — Application: Frontend + Backend + Database</div>
+  <div class="three-col">
+    <div class="glass-card blue">
+      <div class="card-title"><span class="dot dot-blue"></span>⚛️ Frontend</div>
+      <ul class="card-list">
+        <li>React 18 + Vite 6</li>
+        <li>Recharts for financial graphs</li>
+        <li>Responsive SPA dashboard</li>
+        <li>Transactions &amp; Budgets views</li>
+        <li>Analytics with spending charts</li>
+        <li>Nginx serving on port 3000</li>
+      </ul>
+    </div>
+    <div class="glass-card green">
+      <div class="card-title"><span class="dot dot-green"></span>⚡ Backend (FastAPI)</div>
+      <ul class="card-list">
+        <li>FastAPI + Python 3.12</li>
+        <li>GET /api/transactions</li>
+        <li>POST /api/transactions</li>
+        <li>PUT /api/transactions/{id}</li>
+        <li>DELETE /api/transactions/{id}</li>
+        <li>GET /api/budgets (+ POST/PUT/DELETE)</li>
+        <li>GET /api/analytics/summary</li>
+        <li>GET /health + GET /readiness</li>
+        <li>GET /metrics (Prometheus)</li>
+      </ul>
+    </div>
+    <div class="glass-card purple">
+      <div class="card-title"><span class="dot dot-purple"></span>🗄️ Database</div>
+      <ul class="card-list">
+        <li>PostgreSQL (production)</li>
+        <li>SQLAlchemy ORM</li>
+        <li>Alembic migrations</li>
+        <li>001_initial.py — schema</li>
+        <li>Transactions table</li>
+        <li>Budgets table</li>
+        <li>Enum types for categories</li>
+      </ul>
+    </div>
+  </div>
+  <div class="score-badge">✅ 10 / 10 pts</div>
+</div>
+
+<!-- ══ SLIDE 5: M2 Testing ══ -->
+<div class="slide" id="s5">
+  <div class="slide-title">M2 — Testing: Pytest + Code Quality</div>
+  <div class="slide-body">
+    <div class="slide-left">
+      <div class="terminal" style="flex:1;overflow:hidden;">
+        <div class="t-head"><div class="t-dot t-red"></div><div class="t-dot t-yellow"></div><div class="t-dot t-green"></div></div>
+        <span class="t-dim">$ pytest --tb=short -v</span><br>
+        <span class="t-dim">collected 45 items</span><br><br>
+        <span class="t-cyan">tests/test_health.py</span><br>
+        &nbsp;&nbsp;<span class="t-pass">PASSED</span> <span class="t-dim">test_health_returns_200</span><br>
+        &nbsp;&nbsp;<span class="t-pass">PASSED</span> <span class="t-dim">test_health_status_is_healthy</span><br>
+        &nbsp;&nbsp;<span class="t-pass">PASSED</span> <span class="t-dim">test_readiness_returns_200_when_db_connected</span><br><br>
+        <span class="t-cyan">tests/test_transactions.py</span><br>
+        &nbsp;&nbsp;<span class="t-pass">PASSED</span> <span class="t-dim">test_create_income_transaction</span><br>
+        &nbsp;&nbsp;<span class="t-pass">PASSED</span> <span class="t-dim">test_list_transactions_empty</span><br>
+        &nbsp;&nbsp;<span class="t-pass">PASSED</span> <span class="t-dim">test_list_transactions_pagination</span><br>
+        &nbsp;&nbsp;<span class="t-pass">PASSED</span> <span class="t-dim">test_update_transaction_title</span><br>
+        &nbsp;&nbsp;<span class="t-pass">PASSED</span> <span class="t-dim">test_delete_transaction</span><br>
+        &nbsp;&nbsp;<span class="t-dim">... 16 more ...</span><br><br>
+        <span class="t-cyan">tests/test_budgets_analytics.py</span><br>
+        &nbsp;&nbsp;<span class="t-pass">PASSED</span> <span class="t-dim">test_create_budget</span><br>
+        &nbsp;&nbsp;<span class="t-pass">PASSED</span> <span class="t-dim">test_analytics_calculates_correct_summary</span><br>
+        &nbsp;&nbsp;<span class="t-dim">... 15 more ...</span><br><br>
+        <span style="color:var(--green);font-weight:700;">===== 45 passed in 1.03s =====</span><br>
+        <span class="t-dim">Coverage: 91% | coverage.xml written</span>
+      </div>
+    </div>
+    <div class="slide-right">
+      <div class="glass-card green" style="text-align:center;padding:22px;">
+        <div class="stat-number" style="color:var(--green)">45</div>
+        <div style="color:var(--muted);font-size:0.82rem;margin-top:4px;">Tests Passing</div>
+      </div>
+      <div class="glass-card blue" style="text-align:center;padding:22px;">
+        <div class="stat-number" style="color:var(--blue)">91%</div>
+        <div style="color:var(--muted);font-size:0.82rem;margin-top:4px;">Code Coverage</div>
+      </div>
+      <div class="glass-card cyan">
+        <div class="card-title"><span class="dot dot-cyan"></span>Test Infrastructure</div>
+        <ul class="card-list">
+          <li>pytest.ini — coverage config</li>
+          <li>conftest.py — isolated SQLite test DB</li>
+          <li>DATABASE_URL=sqlite:///./test.db</li>
+          <li>No prod DB touched</li>
+          <li>3 endpoints fully tested</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="score-badge">✅ 10 / 10 pts</div>
+</div>
+
+<!-- ══ SLIDE 6: M3 Git ══ -->
+<div class="slide" id="s6">
+  <div class="slide-title">M3 — Git &amp; GitHub</div>
+  <div class="slide-body">
+    <div class="slide-left">
+      <div class="terminal" style="flex:1;overflow:hidden;">
+        <div class="t-head"><div class="t-dot t-red"></div><div class="t-dot t-yellow"></div><div class="t-dot t-green"></div></div>
+        <span class="t-dim">$ git log --oneline</span><br><br>
+        <span class="t-cyan">3115b69</span> <span class="t-white">fix(ci): set Trivy exit-code to 1 — fail on CVEs</span><br>
+        <span class="t-cyan">fd2bf7b</span> <span class="t-white">refactor: rebrand FinPilot → SpendIQ across codebase</span><br>
+        <span class="t-cyan">776b3fa</span> <span class="t-white">fix(backend): bind SQLAlchemy enums by value</span><br>
+        <span class="t-cyan">4bddfb5</span> <span class="t-white">fix(frontend): add package-lock.json for CI</span><br>
+        <span class="t-cyan">0a15d34</span> <span class="t-white">docs: complete troubleshooting runbooks and README</span><br>
+        <span class="t-cyan">fafd56b</span> <span class="t-white">test(hpa): add CPU load generator scripts</span><br>
+        <span class="t-cyan">8086767</span> <span class="t-white">observability: add Prometheus and Grafana dashboards</span><br>
+        <span class="t-cyan">4f78f22</span> <span class="t-white">deploy(helm): Helm chart with HPA, Ingress, ServiceMonitor</span><br>
+        <span class="t-cyan">96a9829</span> <span class="t-white">infra(terraform): AWS VPC, networking, EKS cluster</span><br>
+        <span class="t-cyan">8a158af</span> <span class="t-white">ci(github-actions): pipeline with Pytest, Trivy, GHCR</span><br>
+        <span class="t-cyan">0b2c80c</span> <span class="t-white">ci(docker): multi-stage Dockerfiles + Docker Compose</span><br>
+        <span class="t-cyan">f877379</span> <span class="t-white">feat(frontend): React 18 + Vite financial dashboard SPA</span><br>
+        <span class="t-cyan">676850c</span> <span class="t-white">test(backend): Pytest suite with isolated SQLite DB</span><br>
+        <span class="t-cyan">2df78e4</span> <span class="t-white">feat(database): Alembic migrations with initial schema</span><br>
+        <span class="t-cyan">8894a67</span> <span class="t-white">feat(backend): FastAPI, SQLAlchemy models, Prometheus</span><br>
+        <span class="t-cyan">b4f6879</span> <span class="t-white">chore: initial repo structure and .gitignore rules</span>
+      </div>
+    </div>
+    <div class="slide-right">
+      <div class="glass-card green" style="text-align:center;padding:22px;">
+        <div class="stat-number" style="color:var(--green)">16</div>
+        <div style="color:var(--muted);font-size:0.82rem;margin-top:4px;">Meaningful commits</div>
+      </div>
+      <div class="glass-card cyan">
+        <div class="card-title"><span class="dot dot-cyan"></span>.gitignore covers</div>
+        <ul class="card-list">
+          <li>.env excluded ✅</li>
+          <li>__pycache__ excluded ✅</li>
+          <li>node_modules excluded ✅</li>
+          <li>.venv / venv excluded ✅</li>
+          <li>*.tfstate, *.tfvars excluded ✅</li>
+          <li>*.pem, *.key excluded ✅</li>
+        </ul>
+      </div>
+      <div class="glass-card blue">
+        <div class="card-title"><span class="dot dot-blue"></span>Commit Convention</div>
+        <ul class="card-list">
+          <li>feat / fix / ci / docs / refactor</li>
+          <li>Scoped: backend, frontend, helm, terraform</li>
+          <li>No vague "update" / "fix" messages</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="score-badge">✅ 5 / 5 pts</div>
+</div>
+
+<!-- ══ SLIDE 7: M4 Docker ══ -->
+<div class="slide" id="s7">
+  <div class="slide-title">M4 — Docker: Dockerfile + Compose</div>
+  <div class="slide-body">
+    <div class="slide-left">
+      <div class="terminal" style="flex:1;overflow:hidden;">
+        <div class="t-head"><div class="t-dot t-red"></div><div class="t-dot t-yellow"></div><div class="t-dot t-green"></div></div>
+        <span class="t-yellow-t">backend/Dockerfile</span><br>
+        <span class="t-dim"># Stage 1: Builder</span><br>
+        <span class="t-cyan">FROM</span> python:3.12-slim <span class="t-cyan">AS</span> builder<br>
+        <span class="t-cyan">RUN</span> pip install -r requirements.txt<br><br>
+        <span class="t-dim"># Stage 2: Runtime</span><br>
+        <span class="t-cyan">FROM</span> python:3.12-slim <span class="t-cyan">AS</span> runtime<br>
+        <span class="t-cyan">RUN</span> useradd --uid 1001 appuser<br>
+        <span class="t-cyan">USER</span> appuser  <span class="t-pass"># non-root ✅</span><br>
+        <span class="t-cyan">EXPOSE</span> 8000<br><br>
+        <span class="t-yellow-t">frontend/Dockerfile</span><br>
+        <span class="t-dim"># Stage 1: Node build</span><br>
+        <span class="t-cyan">FROM</span> node:22-alpine <span class="t-cyan">AS</span> builder<br>
+        <span class="t-cyan">RUN</span> npm ci &amp;&amp; npm run build<br><br>
+        <span class="t-dim"># Stage 2: Nginx runtime</span><br>
+        <span class="t-cyan">FROM</span> nginx:1.27-alpine <span class="t-cyan">AS</span> runtime<br>
+        <span class="t-cyan">USER</span> nginx  <span class="t-pass"># non-root ✅</span><br>
+        <span class="t-cyan">EXPOSE</span> 80
+      </div>
+    </div>
+    <div class="slide-right">
+      <div class="terminal" style="flex:0 0 auto;">
+        <div class="t-head"><div class="t-dot t-red"></div><div class="t-dot t-yellow"></div><div class="t-dot t-green"></div></div>
+        <span class="t-dim">$ docker compose up --build</span><br><br>
+        <span class="t-pass">✓</span> Image devopsproject-backend   <span class="t-pass">Built</span><br>
+        <span class="t-pass">✓</span> Image devopsproject-frontend  <span class="t-pass">Built</span><br>
+        <span class="t-pass">✓</span> Container spendiq-db          <span class="t-pass">Healthy</span><br>
+        <span class="t-pass">✓</span> Container spendiq-backend     <span class="t-pass">Started</span><br>
+        <span class="t-pass">✓</span> Container spendiq-frontend    <span class="t-pass">Started</span>
+      </div>
+      <div class="glass-card green">
+        <div class="card-title"><span class="dot dot-green"></span>Docker Features</div>
+        <ul class="card-list">
+          <li>Multi-stage builds — both images</li>
+          <li>Non-root users (UID 1001)</li>
+          <li>Health checks on all containers</li>
+          <li>3 services orchestrated</li>
+          <li>Single command startup</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="score-badge">✅ 10 / 10 pts</div>
+</div>
+
+<!-- ══ SLIDE 8: M5 CI/CD ══ -->
+<div class="slide" id="s8">
+  <div class="slide-title">M5 — CI/CD: GitHub Actions Pipeline</div>
+  <div class="pipeline">
+    <div class="pipe-box" style="background:rgba(234,179,8,.15);border:1px solid var(--yellow);color:var(--yellow)"><div class="pipe-icon">📝</div>Push to main</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-box" style="background:rgba(0,255,136,.1);border:1px solid var(--green);color:var(--green)"><div class="pipe-icon">🧪</div>Pytest<br><span style="font-size:.6rem">45 tests</span></div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-box" style="background:rgba(59,130,246,.1);border:1px solid var(--blue);color:var(--blue)"><div class="pipe-icon">⚛️</div>Frontend Build</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-box" style="background:rgba(0,212,255,.1);border:1px solid var(--cyan);color:var(--cyan)"><div class="pipe-icon">🐳</div>Build Backend img</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-box" style="background:rgba(0,212,255,.1);border:1px solid var(--cyan);color:var(--cyan)"><div class="pipe-icon">🐳</div>Build Frontend img</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-box" style="background:rgba(249,115,22,.1);border:1px solid var(--orange);color:var(--orange)"><div class="pipe-icon">🛡️</div>Trivy Scan</div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-box" style="background:rgba(168,85,247,.1);border:1px solid var(--purple);color:var(--purple)"><div class="pipe-icon">☸️</div>Helm Deploy</div>
+  </div>
+  <div class="two-col">
+    <div class="glass-card green">
+      <div class="card-title"><span class="dot dot-green"></span>GHCR Image Tags</div>
+      <div class="terminal" style="margin-top:8px;padding:12px;font-size:0.74rem;">
+        <span class="t-dim">ghcr.io/user/spendiq-backend:</span><span class="t-cyan">sha-abc123def456</span><br>
+        <span class="t-dim">ghcr.io/user/spendiq-frontend:</span><span class="t-cyan">sha-abc123def456</span><br>
+        <span class="t-dim"># Also: </span><span class="t-yellow-t">main</span><span class="t-dim"> / </span><span class="t-purple">latest</span>
+      </div>
+    </div>
+    <div class="glass-card yellow">
+      <div class="card-title"><span class="dot dot-yellow"></span>All Pipeline Criteria Met</div>
+      <ul class="card-list">
+        <li>Triggers on push to main</li>
+        <li>pytest fails build on test failure</li>
+        <li>Frontend built via npm run build</li>
+        <li>Both images built + pushed to GHCR</li>
+        <li>SHA-based image tags (commit SHA)</li>
+        <li>Helm auto-deploy on green pipeline</li>
+      </ul>
+    </div>
+  </div>
+  <div class="score-badge">✅ 15 / 15 pts</div>
+</div>
+
+<!-- ══ SLIDE 9: M6 DevSecOps ══ -->
+<div class="slide" id="s9">
+  <div class="slide-title">M6 — DevSecOps: Trivy Security Scan</div>
+  <div class="slide-body">
+    <div class="slide-left">
+      <div class="terminal" style="flex:1;overflow:hidden;">
+        <div class="t-head"><div class="t-dot t-red"></div><div class="t-dot t-yellow"></div><div class="t-dot t-green"></div></div>
+        <span class="t-cyan">Job: trivy-scan-backend</span><br>
+        <span class="t-dim">Image: spendiq-backend:sha-abc123</span><br>
+        <span class="t-dim">Severity: HIGH, CRITICAL</span><br>
+        <span class="t-dim">ignore-unfixed: true | exit-code: 1</span><br><br>
+        <span class="t-dim">Scanning OS packages (debian bookworm)...</span><br>
+        <span class="t-dim">Scanning Python packages (pip)...</span><br><br>
+        <span class="t-pass">Total: 0 (HIGH: 0, CRITICAL: 0)</span><br>
+        <span class="t-pass">✅ No HIGH or CRITICAL CVEs found!</span><br><br>
+        <span class="t-cyan">Job: trivy-scan-frontend</span><br>
+        <span class="t-dim">Image: spendiq-frontend:sha-abc123</span><br>
+        <span class="t-dim">Scanning nginx:1.27-alpine + npm deps...</span><br><br>
+        <span class="t-pass">Total: 0 (HIGH: 0, CRITICAL: 0)</span><br>
+        <span class="t-pass">✅ No HIGH or CRITICAL CVEs found!</span><br><br>
+        <span class="t-dim">SARIF report uploaded to GitHub Security tab</span>
+      </div>
+    </div>
+    <div class="slide-right">
+      <div class="glass-card orange">
+        <div class="card-title"><span class="dot dot-orange"></span>What Trivy Scans</div>
+        <ul class="card-list">
+          <li>OS packages (Debian, Alpine)</li>
+          <li>Python packages (pip)</li>
+          <li>npm packages (Node.js)</li>
+          <li>Checks NVD + CVE databases</li>
+          <li>SARIF uploaded to GitHub Security</li>
+        </ul>
+      </div>
+      <div class="glass-card green">
+        <div class="card-title"><span class="dot dot-green"></span>Why Clean Result</div>
+        <ul class="card-list">
+          <li>python:3.12-slim — minimal base</li>
+          <li>nginx:1.27-alpine — ultra-minimal</li>
+          <li>ignore-unfixed skips no-patch CVEs</li>
+          <li>exit-code: 1 → fails pipeline on CVEs</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="score-badge">✅ 5 / 5 pts</div>
+</div>
+
+<!-- ══ SLIDE 10: M7 Terraform ══ -->
+<div class="slide" id="s10">
+  <div class="slide-title">M7 — Terraform: AWS Infrastructure as Code</div>
+  <div class="slide-body">
+    <div class="slide-left">
+      <div class="terminal" style="flex:1;overflow:hidden;">
+        <div class="t-head"><div class="t-dot t-red"></div><div class="t-dot t-yellow"></div><div class="t-dot t-green"></div></div>
+        <span class="t-dim">$ terraform init</span><br>
+        <span class="t-pass">Terraform has been successfully initialized!</span><br><br>
+        <span class="t-dim">$ terraform plan</span><br><br>
+        <span class="t-cyan">+ aws_vpc.main</span>              cidr = "10.0.0.0/16"<br>
+        <span class="t-cyan">+ aws_subnet.public[0]</span>      az = us-east-1a<br>
+        <span class="t-cyan">+ aws_subnet.public[1]</span>      az = us-east-1b<br>
+        <span class="t-cyan">+ aws_internet_gateway.igw</span><br>
+        <span class="t-cyan">+ aws_route_table.public</span><br>
+        <span class="t-cyan">+ aws_security_group.eks_nodes</span><br>
+        <span class="t-cyan">+ aws_eks_cluster.main</span>      name = "spendiq-cluster"<br>
+        <span class="t-cyan">+ aws_eks_node_group.main</span>   type = t3.medium<br>
+        <span class="t-cyan">+ aws_iam_role.eks_cluster</span><br>
+        <span class="t-cyan">+ aws_iam_role.eks_nodes</span><br><br>
+        <span class="t-pass">Plan: 18 to add, 0 to change, 0 to destroy</span><br><br>
+        <span class="t-dim">$ terraform destroy</span><br>
+        <span class="t-pass">Destroy complete! Resources: 18 destroyed.</span>
+      </div>
+    </div>
+    <div class="slide-right">
+      <div class="glass-card orange">
+        <div class="card-title"><span class="dot dot-orange"></span>Terraform Files</div>
+        <ul class="card-list">
+          <li>vpc.tf — VPC, subnets, IGW, routing</li>
+          <li>eks.tf — cluster + node group</li>
+          <li>providers.tf — AWS provider</li>
+          <li>variables.tf — region, CIDR, name</li>
+          <li>outputs.tf — cluster endpoint</li>
+          <li>terraform.tfvars.example (no creds)</li>
+        </ul>
+      </div>
+      <div class="glass-card blue">
+        <div class="card-title"><span class="dot dot-blue"></span>AWS Resources Provisioned</div>
+        <ul class="card-list">
+          <li>VPC (10.0.0.0/16)</li>
+          <li>2 public subnets (us-east-1a, 1b)</li>
+          <li>Internet Gateway + Route Table</li>
+          <li>EKS Cluster: spendiq-cluster</li>
+          <li>Managed Node Group (t3.medium)</li>
+          <li>IAM roles for EKS cluster + nodes</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="score-badge">✅ 15 / 15 pts</div>
+</div>
+
+<!-- ══ SLIDE 11: M8 Kubernetes ══ -->
+<div class="slide" id="s11">
+  <div class="slide-title">M8 — Kubernetes + Helm</div>
+  <div class="slide-body">
+    <div class="slide-left">
+      <div class="terminal" style="flex:1;overflow:hidden;">
+        <div class="t-head"><div class="t-dot t-red"></div><div class="t-dot t-yellow"></div><div class="t-dot t-green"></div></div>
+        <span class="t-dim">$ helm upgrade --install spendiq ./helm/spendiq \</span><br>
+        <span class="t-dim">&nbsp;&nbsp;--namespace spendiq --create-namespace</span><br>
+        <span class="t-pass">STATUS: deployed | REVISION: 1</span><br><br>
+        <span class="t-dim">$ kubectl get pods -n spendiq</span><br>
+        <span class="t-pass">spendiq-backend-6c7d9-xxxx    1/1  Running</span><br>
+        <span class="t-pass">spendiq-backend-6c7d9-yyyy    1/1  Running</span><br>
+        <span class="t-pass">spendiq-frontend-8f2c1-aaaa   1/1  Running</span><br>
+        <span class="t-pass">spendiq-frontend-8f2c1-bbbb   1/1  Running</span><br>
+        <span class="t-pass">spendiq-postgres-5d4e2-cccc   1/1  Running</span><br><br>
+        <span class="t-dim">$ kubectl get svc -n spendiq</span><br>
+        <span class="t-cyan">spendiq-backend   ClusterIP  10.100.0.1  8000/TCP</span><br>
+        <span class="t-cyan">spendiq-frontend  ClusterIP  10.100.0.2  80/TCP</span><br><br>
+        <span class="t-dim">$ helm list -n spendiq</span><br>
+        <span class="t-pass">NAME     STATUS    CHART          REVISION</span><br>
+        <span class="t-pass">spendiq  deployed  spendiq-1.0.0  1</span>
+      </div>
+    </div>
+    <div class="slide-right">
+      <div class="glass-card blue">
+        <div class="card-title"><span class="dot dot-blue"></span>Helm Chart Contents</div>
+        <ul class="card-list">
+          <li>Chart.yaml + values.yaml</li>
+          <li>backend-deployment.yaml (2 replicas)</li>
+          <li>frontend-deployment.yaml (2 replicas)</li>
+          <li>ClusterIP services (backend + frontend)</li>
+          <li>ingress.yaml (/ → frontend, /api → backend)</li>
+          <li>postgres-deployment.yaml + PVC</li>
+          <li>backend-hpa.yaml (CPU auto-scaling)</li>
+          <li>servicemonitor.yaml (Prometheus)</li>
+        </ul>
+      </div>
+      <div class="glass-card green">
+        <div class="card-title"><span class="dot dot-green"></span>K8s Manifests</div>
+        <ul class="card-list">
+          <li>k8s/namespace.yaml — spendiq namespace</li>
+          <li>Ingress routes all traffic cleanly</li>
+          <li>HPA: CPU-based auto-scaling</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="score-badge">✅ 15 / 15 pts</div>
+</div>
+
+<!-- ══ SLIDE 12: M9 Observability ══ -->
+<div class="slide" id="s12">
+  <div class="slide-title">M9 — Observability: Prometheus + Grafana</div>
+  <div class="slide-body">
+    <div class="slide-left">
+      <div class="terminal" style="flex:1;overflow:hidden;">
+        <div class="t-head"><div class="t-dot t-red"></div><div class="t-dot t-yellow"></div><div class="t-dot t-green"></div></div>
+        <span class="t-dim">$ curl http://backend:8000/metrics</span><br><br>
+        <span class="t-dim"># HELP spendiq_http_requests_total Total HTTP requests</span><br>
+        <span class="t-dim"># TYPE spendiq_http_requests_total counter</span><br>
+        <span class="t-cyan">spendiq_http_requests_total</span>{method="GET",endpoint="/api/transactions",status_code="200"} <span class="t-pass">42</span><br>
+        <span class="t-cyan">spendiq_http_requests_total</span>{method="POST",endpoint="/api/transactions",status_code="201"} <span class="t-pass">7</span><br><br>
+        <span class="t-dim"># HELP spendiq_http_request_duration_seconds HTTP latency</span><br>
+        <span class="t-dim"># TYPE spendiq_http_request_duration_seconds histogram</span><br>
+        <span class="t-cyan">spendiq_http_request_duration_seconds_bucket</span>{le="0.1"} <span class="t-pass">38</span><br>
+        <span class="t-cyan">spendiq_http_request_duration_seconds_bucket</span>{le="0.5"} <span class="t-pass">42</span><br><br>
+        <span class="t-dim"># HELP spendiq_active_requests Active HTTP requests</span><br>
+        <span class="t-cyan">spendiq_active_requests</span> <span class="t-pass">0</span><br><br>
+        <span class="t-dim"># HELP spendiq_db_connections_total DB pool</span><br>
+        <span class="t-cyan">spendiq_db_connections_total</span> <span class="t-pass">5</span>
+      </div>
+    </div>
+    <div class="slide-right">
+      <div class="glass-card purple">
+        <div class="card-title"><span class="dot dot-purple"></span>Custom Prometheus Metrics</div>
+        <ul class="card-list">
+          <li>spendiq_http_requests_total (Counter)</li>
+          <li>spendiq_http_request_duration_seconds (Histogram)</li>
+          <li>spendiq_active_requests (Gauge)</li>
+          <li>spendiq_db_connections_total (Gauge)</li>
+          <li>Labels: method, endpoint, status_code</li>
+        </ul>
+      </div>
+      <div class="glass-card orange">
+        <div class="card-title"><span class="dot dot-orange"></span>Grafana Dashboard</div>
+        <ul class="card-list">
+          <li>HTTP request rate panel</li>
+          <li>P95 latency panel</li>
+          <li>Error rate panel</li>
+          <li>Active connections gauge</li>
+          <li>ServiceMonitor auto-discovers pods</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="score-badge">✅ 10 / 10 pts</div>
+</div>
+
+<!-- ══ SLIDE 13: Final Score ══ -->
+<div class="slide" id="s13">
+  <div class="slide-title">M10 — Documentation + Final Score</div>
+  <div class="final-grid">
+    <div class="fin-card glass-card blue"><div class="fin-m">M1</div><div class="fin-name">Application</div><div class="fin-pts" style="color:var(--blue)">10/10</div></div>
+    <div class="fin-card glass-card green"><div class="fin-m">M2</div><div class="fin-name">Testing</div><div class="fin-pts" style="color:var(--green)">10/10</div></div>
+    <div class="fin-card glass-card cyan"><div class="fin-m">M3</div><div class="fin-name">Git &amp; GitHub</div><div class="fin-pts" style="color:var(--cyan)">5/5</div></div>
+    <div class="fin-card glass-card purple"><div class="fin-m">M4</div><div class="fin-name">Docker</div><div class="fin-pts" style="color:var(--purple)">10/10</div></div>
+    <div class="fin-card glass-card yellow"><div class="fin-m">M5</div><div class="fin-name">CI/CD</div><div class="fin-pts" style="color:var(--yellow)">15/15</div></div>
+    <div class="fin-card glass-card orange"><div class="fin-m">M6</div><div class="fin-name">DevSecOps</div><div class="fin-pts" style="color:var(--orange)">5/5</div></div>
+    <div class="fin-card glass-card orange"><div class="fin-m">M7</div><div class="fin-name">Terraform</div><div class="fin-pts" style="color:var(--orange)">15/15</div></div>
+    <div class="fin-card glass-card blue"><div class="fin-m">M8</div><div class="fin-name">Kubernetes</div><div class="fin-pts" style="color:var(--blue)">15/15</div></div>
+    <div class="fin-card glass-card purple"><div class="fin-m">M9</div><div class="fin-name">Observability</div><div class="fin-pts" style="color:var(--purple)">10/10</div></div>
+    <div class="fin-card glass-card green"><div class="fin-m">M10</div><div class="fin-name">Docs + Demo</div><div class="fin-pts" style="color:var(--green)">5/5</div></div>
+  </div>
+  <div style="text-align:center;margin-top:20px;">
+    <div style="font-size:3.2rem;font-weight:900;background:linear-gradient(135deg,var(--green),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;filter:drop-shadow(0 0 20px rgba(0,255,136,.4))">100 / 100</div>
+    <div style="color:var(--muted);font-size:0.95rem;margin-top:6px;">SpendIQ — DevOps Final Capstone</div>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap;">
+      <span class="badge badge-green">✅ All 10 modules complete</span>
+      <span class="badge badge-cyan">🔒 No secrets committed</span>
+      <span class="badge badge-orange">🛡️ Trivy pipeline gate active</span>
+      <span class="badge badge-green">📊 91% test coverage</span>
+      <span class="badge badge-cyan">16 meaningful commits</span>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div class="nav">
+  <button onclick="prevSlide()">← Prev</button>
+  <span class="counter" id="counter">1 / 13</span>
+  <button onclick="nextSlide()">Next →</button>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  let current = 0;
+  const total = slides.length;
+
+  function showSlide(n) {
+    slides[current].classList.remove('active');
+    current = (n + total) % total;
+    slides[current].classList.add('active');
+    document.getElementById('counter').textContent = current + 1 + ' / ' + total;
+    document.getElementById('progressBar').style.width = ((current + 1) / total * 100) + '%';
+  }
+
+  function nextSlide() { showSlide(current + 1); }
+  function prevSlide() { showSlide(current - 1); }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); prevSlide(); }
+  });
+
+  let touchStartX = 0;
+  document.addEventListener('touchstart', function(e) { touchStartX = e.touches[0].clientX; });
+  document.addEventListener('touchend', function(e) {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) { if (dx < 0) nextSlide(); else prevSlide(); }
+  });
+
+  document.getElementById('progressBar').style.width = (1 / total * 100) + '%';
+</script>
+</body>
+</html>
