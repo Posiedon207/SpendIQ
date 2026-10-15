@@ -82,11 +82,11 @@ const Dashboard = () => {
   };
 
   const summary = analytics?.summary || {};
-  const monthlyData = (analytics?.monthly_data || []).map((row) => ({
+  const monthlyData = (analytics?.monthly_trend || analytics?.monthly_data || []).map((row) => ({
     ...row,
     month: MONTH_NAMES[(row.month ?? 1) - 1],
   }));
-  const categoryData = analytics?.category_breakdown || [];
+  const categoryData = analytics?.expense_by_category || analytics?.category_breakdown || [];
 
   const styles = {
     page: { maxWidth: 1200 },

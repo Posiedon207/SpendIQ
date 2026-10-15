@@ -24,6 +24,9 @@ MANIFEST
 *.pyc
 *.pyo
 *.pyd
+*.db
+*.sqlite
+*.sqlite3
 .python-version
 .venv/
 venv/
