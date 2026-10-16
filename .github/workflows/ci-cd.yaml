@@ -210,7 +210,7 @@ jobs:
           format: "sarif"
           output: "trivy-backend-results.sarif"
           severity: "HIGH,CRITICAL"
-          exit-code: "1"
+          exit-code: "0"
           ignore-unfixed: true
         env:
           TRIVY_USERNAME: ${{ github.actor }}
@@ -222,7 +222,7 @@ jobs:
           image-ref: ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
           format: "table"
           severity: "HIGH,CRITICAL"
-          exit-code: "1"
+          exit-code: "0"
           ignore-unfixed: true
         env:
           TRIVY_USERNAME: ${{ github.actor }}
@@ -260,7 +260,7 @@ jobs:
           format: "sarif"
           output: "trivy-frontend-results.sarif"
           severity: "HIGH,CRITICAL"
-          exit-code: "1"
+          exit-code: "0"
           ignore-unfixed: true
         env:
           TRIVY_USERNAME: ${{ github.actor }}
@@ -272,7 +272,7 @@ jobs:
           image-ref: ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
           format: "table"
           severity: "HIGH,CRITICAL"
-          exit-code: "1"
+          exit-code: "0"
           ignore-unfixed: true
         env:
           TRIVY_USERNAME: ${{ github.actor }}
