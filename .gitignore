@@ -124,6 +124,9 @@ Thumbs.db
 logs/
 *.tmp
 *.temp
+~$*
+~$*.pptx
+
 
 # AWS
 .aws/credentials
